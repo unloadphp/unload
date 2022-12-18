@@ -1,0 +1,168 @@
+---
+# Copyright 2018 widdix GmbH
+# Modification Copyright 2022 unload.sh
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'VPC: serverless NAT Gateway'
+Parameters:
+  VpcRouteTablePrivate:
+    Description: 'Vpc VpcRouteTablePrivate'
+    Type: String
+  VpcSubnetPublic:
+    Description: 'Vpc VpcSubnetPublic'
+    Type: String
+
+  ParentAlertStack:
+    Description: 'Optional but recommended stack name of parent alert stack based on operations/alert.yaml template.'
+    Type: String
+    Default: ''
+  SubnetZone:
+    Description: 'Subnet zone.'
+    Type: String
+    Default: A
+    AllowedValues:
+      - A
+      - B
+      - C
+      - D
+Conditions:
+  HasAlertTopic: !Not [ !Equals [ !Ref ParentAlertStack, '' ] ]
+Resources:
+  NatEIP:
+    Type: 'AWS::EC2::EIP'
+    UpdateReplacePolicy: Delete
+    Properties:
+      Domain: vpc
+  NatGateway:
+    Type: 'AWS::EC2::NatGateway'
+    Properties:
+      AllocationId: !GetAtt 'NatEIP.AllocationId'
+      SubnetId: !Ref VpcSubnetPublic
+  Route:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !Ref VpcRouteTablePrivate
+      DestinationCidrBlock: '0.0.0.0/0'
+      NatGatewayId: !Ref NatGateway
+  AlarmNatGatewayErrorPortAllocation:
+    Condition: HasAlertTopic
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: !Sub 'NAT gateway ${SubnetZone} could not allocate a source port'
+      Namespace: 'AWS/NATGateway'
+      MetricName: ErrorPortAllocation
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - { 'Fn::ImportValue': !Sub '${ParentAlertStack}-TopicARN' }
+      Dimensions:
+        - Name: NatGatewayId
+          Value: !Ref NatGateway
+  AlarmNatGatewayPacketsDropCount:
+    Condition: HasAlertTopic
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmDescription: !Sub 'NAT gateway ${SubnetZone} dropped packets'
+      Namespace: 'AWS/NATGateway'
+      MetricName: PacketsDropCount
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanThreshold
+      Threshold: 0
+      AlarmActions:
+        - { 'Fn::ImportValue': !Sub '${ParentAlertStack}-TopicARN' }
+      Dimensions:
+        - Name: NatGatewayId
+          Value: !Ref NatGateway
+  AlarmNatGatewayBandwidth:
+    Condition: HasAlertTopic
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmActions:
+        - { 'Fn::ImportValue': !Sub '${ParentAlertStack}-TopicARN' }
+      AlarmDescription: !Sub 'NAT gateway ${SubnetZone} bandwidth utilization is over 80%'
+      ComparisonOperator: GreaterThanThreshold
+      EvaluationPeriods: 1
+      Metrics:
+        - Id: 'in1'
+          Label: 'InFromDestination'
+          MetricStat:
+            Metric:
+              Namespace: 'AWS/NATGateway'
+              MetricName: BytesInFromDestination # bytes per minute
+              Dimensions:
+                - Name: NatGatewayId
+                  Value: !Ref NatGateway
+            Period: 60
+            Stat: Sum
+            Unit: Bytes
+          ReturnData: false
+        - Id: 'in2'
+          Label: 'InFromSource'
+          MetricStat:
+            Metric:
+              Namespace: 'AWS/NATGateway'
+              MetricName: BytesInFromSource # bytes per minute
+              Dimensions:
+                - Name: NatGatewayId
+                  Value: !Ref NatGateway
+            Period: 60
+            Stat: Sum
+            Unit: Bytes
+          ReturnData: false
+        - Id: 'out1'
+          Label: 'OutToDestination'
+          MetricStat:
+            Metric:
+              Namespace: 'AWS/NATGateway'
+              MetricName: BytesOutToDestination # bytes per minute
+              Dimensions:
+                - Name: NatGatewayId
+                  Value: !Ref NatGateway
+            Period: 60
+            Stat: Sum
+            Unit: Bytes
+          ReturnData: false
+        - Id: 'out2'
+          Label: 'OutToSource'
+          MetricStat:
+            Metric:
+              Namespace: 'AWS/NATGateway'
+              MetricName: BytesOutToSource # bytes per minute
+              Dimensions:
+                - Name: NatGatewayId
+                  Value: !Ref NatGateway
+            Period: 60
+            Stat: Sum
+            Unit: Bytes
+          ReturnData: false
+        - Expression: '(in1+in2+out1+out2)/2/60*8/1000/1000/1000' # to Gbit/s
+          Id: 'bandwidth'
+          Label: 'Bandwidth'
+          ReturnData: true
+      Threshold: 36 # hard limit is 45 Gbit/s
+      TreatMissingData: notBreaching
+Outputs:
+  StackName:
+    Description: 'Stack name.'
+    Value: !Sub '${AWS::StackName}'
+  IPAddress:
+    Description: 'The public IP address of the NAT gateway.'
+    Value: !Ref NatEIP
+    Export:
+      Name: !Sub '${AWS::StackName}-IPAddress'

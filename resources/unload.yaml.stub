@@ -1,0 +1,11 @@
+version: 0.1
+app: %app%
+
+profile: %profile%
+env: %env%
+region: %region%
+runtime: provided
+php: %php%
+
+build: |
+  composer install --ignore-platform-reqs --no-dev --prefer-dist --no-interaction --no-progress --ignore-platform-reqs --optimize-autoloader --classmap-authoritative

@@ -1,0 +1,109 @@
+---
+# Copyright 2018 widdix GmbH
+# Modification Copyright 2022 unload.sh
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Storage: S3 bucket'
+Parameters:
+  BucketName:
+    Description: 'Optional name of the bucket.'
+    Type: String
+    Default: ''
+  Access:
+    Description: 'Access policy of the bucket.'
+    Type: String
+    Default: Private
+    AllowedValues: [ Private, PublicRead]
+  Versioning:
+    Description: 'Enable versioning to keep a backup if objects change.'
+    Type: String
+    Default: true
+    AllowedValues: [ true, false, 'suspended' ]
+  NoncurrentVersionExpirationInDays:
+    Description: 'Remove noncurrent object versions after days (set to 0 to disable).'
+    Type: Number
+    Default: 0
+    MinValue: 0
+  ExpirationInDays:
+    Description: 'Remove objects after days (set to 0 to disable).'
+    Type: Number
+    Default: 0
+    MinValue: 0
+  ExpirationPrefix:
+    Description: 'Optional key prefix for expiring objects.'
+    Type: String
+    Default: ''
+Conditions:
+  HasPrivateAccess: !Equals [ !Ref Access, Private ]
+  HasPublicReadAccess: !Equals [ !Ref Access, PublicRead ]
+  HasBucketName: !Not [ !Equals [ !Ref BucketName, '' ] ]
+  HasVersioning: !Equals [ !Ref Versioning, true ]
+  HadVersioning: !Equals [ !Ref Versioning, 'suspended' ]
+  HasNoncurrentVersionExpirationInDays: !Not [ !Equals [ !Ref NoncurrentVersionExpirationInDays, 0 ] ]
+  HasExpirationInDays: !Not [ !Equals [ !Ref ExpirationInDays, 0 ] ]
+  HasExpirationPrefix: !Not [ !Equals [ !Ref ExpirationPrefix, '' ] ]
+  HasPublicAccessBlock: !Not [ !Condition HasPublicReadAccess ]
+Resources:
+  Bucket: # cannot be deleted with data
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: "Retain"
+    Properties:
+      BucketName: !If [ HasBucketName, !Ref BucketName, !Ref 'AWS::NoValue' ]
+      LifecycleConfiguration:
+        Rules:
+          - AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 7
+            Status: Enabled
+          - NoncurrentVersionExpirationInDays: !If [ HasNoncurrentVersionExpirationInDays, !Ref NoncurrentVersionExpirationInDays, 1 ]
+            Status: !If [ HasNoncurrentVersionExpirationInDays, Enabled, Disabled ]
+          - ExpirationInDays: !If [ HasExpirationInDays, !Ref ExpirationInDays, 1 ]
+            Prefix: !If [ HasExpirationPrefix, !Ref ExpirationPrefix, !Ref 'AWS::NoValue' ]
+            Status: !If [ HasExpirationInDays, Enabled, Disabled ]
+      PublicAccessBlockConfiguration: !If [ HasPublicAccessBlock, { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }, !Ref 'AWS::NoValue' ]
+      VersioningConfiguration: !If [ HasVersioning, { Status: Enabled }, !If [ HadVersioning, { Status: Suspended }, !Ref 'AWS::NoValue' ] ]
+  BucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowSSLRequestsOnly
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt 'Bucket.Arn'
+              - !Sub '${Bucket.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - !If
+            - HasPublicReadAccess
+            - Principal: '*'
+              Action: 's3:GetObject'
+              Effect: Allow
+              Resource: !Sub '${Bucket.Arn}/*'
+            - !Ref 'AWS::NoValue'
+Outputs:
+  BucketName:
+    Description: 'Name of the bucket'
+    Value: !Ref Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  BucketDomainName:
+    Description: 'Domain name of the bucket.'
+    Value: !GetAtt 'Bucket.DomainName'
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketDomainName'

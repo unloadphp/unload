@@ -1,0 +1,354 @@
+---
+# Copyright 2022 unload.sh
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: 'CI: deployment resources'
+Parameters:
+  Application:
+    Type: String
+  Env:
+    Type: String
+  PipelineExecutionRoleArn:
+    Default: ""
+    Type: String
+  CloudFormationExecutionRoleArn:
+    Default: ""
+    Type: String
+  ArtifactsBucketArn:
+    Type: String
+    Default: ""
+  CreateImageRepository:
+    Type: String
+    Default: false
+    AllowedValues: [true, false]
+  ImageRepositoryArn:
+    Default: ""
+    Type: String
+  IdentityProviderThumbprint:
+    Type: String
+  OidcClientId:
+    Type: String
+  OidcProviderUrl:
+    Type: String
+  UseOidcProvider:
+    Type: String
+    Default: true
+    AllowedValues: [true, false]
+  SubjectClaim:
+    Type: String
+  CreateNewOidcProvider:
+    Type: String
+    AllowedValues: [true, false]
+
+Conditions:
+  MissingOidcProvider: !Equals [!Ref CreateNewOidcProvider, "true"]
+  DontUseOidc: !Not [!Equals [!Ref UseOidcProvider, "true"] ]
+  MissingPipelineExecutionRole: !Equals [!Ref PipelineExecutionRoleArn, ""]
+  MissingCloudFormationExecutionRole: !Equals [!Ref CloudFormationExecutionRoleArn, ""]
+  MissingArtifactsBucket: !Equals [!Ref ArtifactsBucketArn, ""]
+  ShouldHaveImageRepository: !Or [!Equals [!Ref CreateImageRepository, "true"], !Not [!Equals [!Ref ImageRepositoryArn, ""]]]
+  MissingImageRepository: !And [!Condition ShouldHaveImageRepository, !Equals [!Ref ImageRepositoryArn, ""]]
+
+Resources:
+  OidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: MissingOidcProvider
+    Properties:
+      ClientIdList:
+        - !Ref OidcClientId
+      ThumbprintList:
+        - !Ref IdentityProviderThumbprint
+      Url: !Ref OidcProviderUrl
+
+  CloudFormationExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: MissingCloudFormationExecutionRole
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: GrantCloudFormationFullAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: '*'
+                Resource: '*'
+
+  PipelineExecutionRole:
+    Type: AWS::IAM::Role
+    Condition: MissingPipelineExecutionRole
+    Properties:
+      Tags:
+        - Key: Role
+          Value: pipeline-execution-role
+      AssumeRolePolicyDocument: !Sub
+        - |
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Federated": "arn:${AWS::Partition}:iam::${AWS::AccountId}:oidc-provider/${Url}"
+                },
+                "Action": "sts:AssumeRoleWithWebIdentity",
+                "Condition": {
+                  "ForAllValues:StringLike": {
+                    "${Url}:aud": "${OidcClientId}",
+                    "${Url}:sub":  "${SubjectClaim}"
+                  }
+                }
+              }
+            ]
+          }
+        - Url: !Select [ 1, !Split [ "//", !Ref OidcProviderUrl ] ]
+
+
+  ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Condition: MissingArtifactsBucket
+    DeletionPolicy: "Retain"
+    Properties:
+      LoggingConfiguration:
+        DestinationBucketName:
+          !Ref ArtifactsLoggingBucket
+        LogFilePrefix: "artifacts-logs"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  ArtifactsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: MissingArtifactsBucket
+    Properties:
+      Bucket: !Ref ArtifactsBucket
+      PolicyDocument:
+        Statement:
+          - Effect: "Deny"
+            Action: "s3:*"
+            Principal: "*"
+            Resource:
+              - !Join [ '',[ !GetAtt ArtifactsBucket.Arn, '/*' ] ]
+              - !GetAtt ArtifactsBucket.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+          - Effect: "Allow"
+            Action:
+              - 's3:GetObject*'
+              - 's3:PutObject*'
+              - 's3:GetBucket*'
+              - 's3:List*'
+            Resource:
+              - !Join ['',[!GetAtt ArtifactsBucket.Arn, '/*']]
+              - !GetAtt ArtifactsBucket.Arn
+            Principal:
+              AWS:
+                - Fn::If:
+                    - MissingPipelineExecutionRole
+                    - !GetAtt PipelineExecutionRole.Arn
+                    - !Ref PipelineExecutionRoleArn
+                - Fn::If:
+                    - MissingCloudFormationExecutionRole
+                    - !GetAtt CloudFormationExecutionRole.Arn
+                    - !Ref CloudFormationExecutionRoleArn
+
+  ArtifactsLoggingBucket:
+    Type: AWS::S3::Bucket
+    Condition: MissingArtifactsBucket
+    DeletionPolicy: "Retain"
+    Properties:
+      AccessControl: "LogDeliveryWrite"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  ArtifactsLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: MissingArtifactsBucket
+    Properties:
+      Bucket: !Ref ArtifactsLoggingBucket
+      PolicyDocument:
+        Statement:
+          - Effect: "Deny"
+            Action: "s3:*"
+            Principal: "*"
+            Resource:
+              - !Join [ '',[ !GetAtt ArtifactsLoggingBucket.Arn, '/*' ] ]
+              - !GetAtt ArtifactsLoggingBucket.Arn
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+
+  PipelineExecutionRolePermissionPolicy:
+    Type: AWS::IAM::Policy
+    Condition: MissingPipelineExecutionRole
+    Properties:
+      PolicyName: PipelineExecutionRolePermissions
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 'iam:PassRole'
+            Resource:
+              Fn::If:
+                - MissingCloudFormationExecutionRole
+                - !GetAtt CloudFormationExecutionRole.Arn
+                - !Ref CloudFormationExecutionRoleArn
+          - Effect: Allow
+            Action:
+              - "cloudformation:CreateChangeSet"
+              - "cloudformation:DescribeChangeSet"
+              - "cloudformation:ExecuteChangeSet"
+              - "cloudformation:DeleteStack"
+              - "cloudformation:DescribeStackEvents"
+              - "cloudformation:DescribeStacks"
+              - "cloudformation:GetTemplate"
+              - "cloudformation:GetTemplateSummary"
+              - "cloudformation:DescribeStackResource"
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - 's3:DeleteObject'
+              - 's3:GetObject*'
+              - 's3:PutObject*'
+              - 's3:GetBucket*'
+              - 's3:List*'
+            Resource:
+              Fn::If:
+                - MissingArtifactsBucket
+                - - !Join [ '',[ !GetAtt ArtifactsBucket.Arn, '/*' ] ]
+                  - !GetAtt ArtifactsBucket.Arn
+                - - !Join [ '',[ !Ref ArtifactsBucketArn, '/*' ] ]
+                  - !Ref ArtifactsBucketArn
+          - Effect: Allow
+            Action:
+              - 'ssm:GetParametersByPath'
+            Resource: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Application}/${Env}/env"
+          - Effect: Allow
+            Action:
+              - 'route53:ListHostedZones'
+            Resource: "*"
+          - Fn::If:
+              - ShouldHaveImageRepository
+              - Effect: "Allow"
+                Action: "ecr:GetAuthorizationToken"
+                Resource: "*"
+              - !Ref AWS::NoValue
+          - Fn::If:
+              - ShouldHaveImageRepository
+              - Effect: "Allow"
+                Action:
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchDeleteImage"
+                  - "ecr:BatchGetImage"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:PutImage"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                Resource:
+                  Fn::If:
+                    - MissingImageRepository
+                    - !GetAtt ImageRepository.Arn
+                    - !Ref ImageRepositoryArn
+              - !Ref AWS::NoValue
+      Roles:
+        - !Ref PipelineExecutionRole
+
+  ImageRepository:
+    Type: AWS::ECR::Repository
+    Condition: MissingImageRepository
+    Properties:
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: LambdaECRImageRetrievalPolicy
+            Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:GetRepositoryPolicy"
+              - "ecr:SetRepositoryPolicy"
+              - "ecr:DeleteRepositoryPolicy"
+          - Sid: AllowPushPull
+            Effect: Allow
+            Principal:
+              AWS:
+                - Fn::If:
+                    - MissingPipelineExecutionRole
+                    - !GetAtt PipelineExecutionRole.Arn
+                    - !Ref PipelineExecutionRoleArn
+                - Fn::If:
+                    - MissingCloudFormationExecutionRole
+                    - !GetAtt CloudFormationExecutionRole.Arn
+                    - !Ref CloudFormationExecutionRoleArn
+            Action:
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:BatchGetImage"
+              - "ecr:BatchCheckLayerAvailability"
+              - "ecr:PutImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
+
+Outputs:
+  CloudFormationExecutionRole:
+    Description: ARN of the IAM Role(CloudFormationExecutionRole)
+    Value:
+      Fn::If:
+        - MissingCloudFormationExecutionRole
+        - !GetAtt CloudFormationExecutionRole.Arn
+        - !Ref CloudFormationExecutionRoleArn
+
+  PipelineExecutionRole:
+    Description: ARN of the IAM Role(PipelineExecutionRole)
+    Value:
+      Fn::If:
+        - MissingPipelineExecutionRole
+        - !GetAtt PipelineExecutionRole.Arn
+        - !Ref PipelineExecutionRoleArn
+
+  ArtifactsBucket:
+    Description: ARN of the Artifacts bucket
+    Value:
+      Fn::If:
+        - MissingArtifactsBucket
+        - !GetAtt ArtifactsBucket.Arn
+        - !Ref ArtifactsBucketArn
+
+  ImageRepository:
+    Description: ARN of the ECR image repository
+    Condition: ShouldHaveImageRepository
+    Value:
+      Fn::If:
+        - MissingImageRepository
+        - !GetAtt ImageRepository.Arn
+        - !Ref ImageRepositoryArn

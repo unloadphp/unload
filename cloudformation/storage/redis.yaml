@@ -1,0 +1,178 @@
+---
+# Copyright 2018 widdix GmbH
+# Modification Copyright 2022 unload.sh
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'State: ElastiCache Redis'
+Parameters:
+  VpcId:
+    Description: 'Vpc Ref'
+    Type: String
+  VpcSubnetsPrivate:
+    Description: 'Vpc Subnets'
+    Type: String
+  VpcSecurityGroup:
+    Description: 'Vpc Security Group'
+    Type: String
+  EngineVersion:
+    Description: 'Redis version'
+    Type: String
+    Default: '5.0.0'
+    AllowedValues:
+      - '4.0.10'
+      - '5.0.0'
+      - '5.0.3'
+      - '5.0.4'
+      - '5.0.5'
+      - '5.0.6'
+      - '6.x'
+  CacheNodeType:
+    Description: 'The compute and memory capacity of the nodes in the node group (shard).'
+    Type: 'String'
+    Default: 'cache.t2.micro'
+  TransitEncryption:
+    Description: 'Enable encryption for data in transit? (see https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/in-transit-encryption.html)'
+    Type: 'String'
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  AuthToken:
+    Description: 'Optional password (16 to 128 characters) used to authenticate against Redis (requires TransitEncryption := true; leave blank to disable password-protection).'
+    Type: 'String'
+    Default: ''
+    MaxLength: 128
+  SnapshotRetentionLimit:
+    Description: 'The number of days for which ElastiCache retains automatic snapshots before deleting them (set to 0 to disable backups).'
+    Type: Number
+    Default: 35
+    MinValue: 0
+    MaxValue: 35
+  NumShards:
+    Description: 'Number of shards in the cluster.'
+    Type: 'Number'
+    Default: 1
+    MinValue: 1
+    MaxValue: 250
+  NumReplicas:
+    Description: 'Number of replicas per shard.'
+    Type: 'Number'
+    Default: 1
+    MinValue: 0
+    MaxValue: 5
+Mappings:
+  EngineVersionMap:
+    '4.0.10':
+      CacheParameterGroupFamily: 'redis4.0'
+    '5.0.0':
+      CacheParameterGroupFamily: 'redis5.0'
+    '5.0.3':
+      CacheParameterGroupFamily: 'redis5.0'
+    '5.0.4':
+      CacheParameterGroupFamily: 'redis5.0'
+    '5.0.5':
+      CacheParameterGroupFamily: 'redis5.0'
+    '5.0.6':
+      CacheParameterGroupFamily: 'redis5.0'
+    '6.x':
+      CacheParameterGroupFamily: 'redis6.x'
+Conditions:
+  HasAuthToken: !Not [!Equals [!Ref AuthToken, '']]
+  HasAutomaticFailoverEnabled: !Not [!Equals [!Ref NumReplicas, 0]]
+  HasClusterModeEnabled: !Not [!Equals [!Ref NumShards, 1]]
+  HasClusterModeDisabled: !Not [!Condition HasClusterModeEnabled]
+Resources:
+  CacheParameterGroup:
+    Type: 'AWS::ElastiCache::ParameterGroup'
+    Properties:
+      CacheParameterGroupFamily: !FindInMap [EngineVersionMap, !Ref EngineVersion, CacheParameterGroupFamily]
+      Description: !Ref 'AWS::StackName'
+      Properties: !If [HasClusterModeEnabled, {'cluster-enabled': 'yes'}, {}]
+  CacheSubnetGroupName:
+    Type: 'AWS::ElastiCache::SubnetGroup'
+    Properties:
+      Description: !Ref 'AWS::StackName'
+      SubnetIds: !Split
+        - ','
+        - !Ref VpcSubnetsPrivate
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: !Ref 'AWS::StackName'
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref VpcSecurityGroup
+  ReplicationGroup:
+    DeletionPolicy: Snapshot
+    UpdateReplacePolicy: Snapshot
+    Type: 'AWS::ElastiCache::ReplicationGroup'
+    Properties:
+      ReplicationGroupDescription: !Ref 'AWS::StackName'
+      AtRestEncryptionEnabled: true
+      AuthToken: !If [HasAuthToken, !Ref AuthToken, !Ref 'AWS::NoValue']
+      AutomaticFailoverEnabled: !If [HasAutomaticFailoverEnabled, true, false]
+      MultiAZEnabled: !If [HasAutomaticFailoverEnabled, true, false]
+      CacheNodeType: !Ref CacheNodeType
+      CacheParameterGroupName: !Ref CacheParameterGroup
+      CacheSubnetGroupName: !Ref CacheSubnetGroupName
+      Engine: redis
+      EngineVersion: !Ref EngineVersion
+      NumNodeGroups: !Ref NumShards
+      ReplicasPerNodeGroup: !Ref NumReplicas
+      PreferredMaintenanceWindow: 'sat:07:00-sat:08:00'
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      SnapshotRetentionLimit: !Ref SnapshotRetentionLimit
+      SnapshotWindow: '00:00-03:00'
+      TransitEncryptionEnabled: !Ref TransitEncryption
+    UpdatePolicy:
+      UseOnlineResharding: true
+Outputs:
+  ClusterName:
+    Description: 'The name of the cluster'
+    Value: !Ref ReplicationGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-ClusterName'
+  PrimaryEndPointAddress:
+    Condition: HasClusterModeDisabled
+    Description: 'The DNS address of the primary read-write cache node.'
+    Value: !GetAtt 'ReplicationGroup.PrimaryEndPoint.Address'
+    Export:
+      Name: !Sub '${AWS::StackName}-PrimaryEndPointAddress'
+  PrimaryEndPointPort:
+    Condition: HasClusterModeDisabled
+    Description: 'The port that the primary read-write cache engine is listening on.'
+    Value: !GetAtt 'ReplicationGroup.PrimaryEndPoint.Port'
+    Export:
+      Name: !Sub '${AWS::StackName}-PrimaryEndPointPort'
+  ConfigurationEndPointAddress:
+    Condition: HasClusterModeEnabled
+    Description: 'The DNS address of the configuration node.'
+    Value: !GetAtt 'ReplicationGroup.ConfigurationEndPoint.Address'
+    Export:
+      Name: !Sub '${AWS::StackName}-ConfigurationEndPointAddress'
+  ConfigurationEndPointPort:
+    Condition: HasClusterModeEnabled
+    Description: 'The port of the configuration node.'
+    Value: !GetAtt 'ReplicationGroup.ConfigurationEndPoint.Port'
+    Export:
+      Name: !Sub '${AWS::StackName}-ConfigurationEndPointPort'
+  SecurityGroupId:
+    Description: 'The security group used to manage access to Elasticache Redis.'
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'
