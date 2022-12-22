@@ -53,7 +53,7 @@ class GeneratePipelineTask
         $stream = fopen('php://stdin', 'w+');
         $input->write($stream);
 
-        $process->start(function ($output, $text) use ($input, $process, &$builder, $output) {
+        $process->start(function ($level, $text) use ($input, $process, &$builder, $output) {
             $output->write("<comment>$text</comment>");
 
             if (str_contains($text, 'Successfully created the pipeline configuration file(s)')) {
