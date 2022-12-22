@@ -45,7 +45,5 @@ class PendingStack
 
             sleep(0.5);
         }
-
-        $section->clear(count($stackEvents));
     }
 }

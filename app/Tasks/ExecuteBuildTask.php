@@ -4,12 +4,13 @@ namespace App\Tasks;
 
 use App\Configs\UnloadConfig;
 use App\Path;
+use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
 
 class ExecuteBuildTask
 {
-    public function handle(UnloadConfig $config): void
+    public function handle(UnloadConfig $config, OutputStyle $output): void
     {
         $commands = $config->build();
         if (!$commands) {
@@ -20,9 +21,7 @@ class ExecuteBuildTask
         foreach($commands as $command) {
             $run = Process::fromShellCommandline($command, Path::tmpApp());
 
-            $run->run(function ($type, $line) {
-                echo $line;
-            });
+            $run->run(fn ($type, $line) => $output->write("<comment>$line</comment>"));
 
             if ($run->getExitCode() && $runError = $run->getErrorOutput()) {
                 throw new \BadMethodCallException($runError);

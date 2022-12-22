@@ -199,6 +199,42 @@ Resources:
             TargetOriginId: s3origin
             PathPattern: /assets/*
             ViewerProtocolPolicy: 'redirect-to-https'
+          - AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: false
+            DefaultTTL: 3600
+            ForwardedValues:
+              Cookies:
+                Forward: none
+              QueryString: false
+            MaxTTL: 86400
+            MinTTL: 60
+            TargetOriginId: s3origin
+            PathPattern: /favicon.ico
+            ViewerProtocolPolicy: 'redirect-to-https'
+          - AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: false
+            DefaultTTL: 3600
+            ForwardedValues:
+              Cookies:
+                Forward: none
+              QueryString: false
+            MaxTTL: 86400
+            MinTTL: 60
+            TargetOriginId: s3origin
+            PathPattern: /robots.txt
+            ViewerProtocolPolicy: 'redirect-to-https'
         Enabled: true
         HttpVersion: http2
         IPV6Enabled: true

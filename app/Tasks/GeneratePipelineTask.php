@@ -2,6 +2,7 @@
 
 namespace App\Tasks;
 
+use Illuminate\Console\OutputStyle;
 use Symfony\Component\Process\InputStream;
 use Symfony\Component\Process\Process;
 
@@ -20,7 +21,7 @@ class GeneratePipelineTask
         $this->definition = $definition;
     }
 
-    public function handle(): void
+    public function handle(OutputStyle $output): void
     {
         if ($this->definition) {
             $tmp = $this->definition;
@@ -29,9 +30,7 @@ class GeneratePipelineTask
             unlink($tmp);
             mkdir($tmp);
             $clone = Process::fromShellCommandline("git clone https://github.com/unloadphp/unload-pipeline.git $tmp");
-            $clone->run(function($out, $text) {
-                echo $text;
-            });
+            $clone->run(fn($out, $text) => $output->write("<comment>$text</comment>"));
         }
 
         $templateProvider = [
@@ -54,8 +53,8 @@ class GeneratePipelineTask
         $stream = fopen('php://stdin', 'w+');
         $input->write($stream);
 
-        $process->start(function ($output, $text) use ($input, $process, &$builder) {
-            echo $text;
+        $process->start(function ($output, $text) use ($input, $process, &$builder, $output) {
+            $output->write("<comment>$text</comment>");
 
             if (str_contains($text, 'Successfully created the pipeline configuration file(s)')) {
                 $input->close();

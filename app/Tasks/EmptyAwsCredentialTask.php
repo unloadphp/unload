@@ -11,13 +11,9 @@ class EmptyAwsCredentialTask
 {
     public function handle(): void
     {
-        $configs = (new Finder())->in(Path::tmpApp('config'));
+        $configs = (new Finder())->in(Path::tmpApp('config'))->files();
 
-        foreach($configs as $config) {
-            if ($config->isDir()) {
-                continue;
-            }
-
+        foreach ($configs as $config) {
             $content = Str::of(File::get($config->getRealPath()))
                 ->replace('AWS_ACCESS_KEY_ID', 'UNLOAD_NULL')
                 ->replace('AWS_SECRET_ACCESS_KEY', 'UNLOAD_NULL')

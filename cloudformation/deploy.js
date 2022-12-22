@@ -29,6 +29,10 @@ exports.handler = async (event, context, callback) => {
 
     var lambdaResult = "Succeeded";
     for (const command of deployCommands) {
+        if (!command.length) {
+            continue;
+        }
+
         console.log("Running: " + command);
 
         var cliParams = {

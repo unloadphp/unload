@@ -2,7 +2,8 @@
 
 namespace App\Constructs;
 
-use App\Path;
+use App\Cloudformation;
+use Illuminate\Support\Arr;
 use Symfony\Component\Yaml\Tag\TaggedValue;
 
 trait BucketConstruct
@@ -16,6 +17,10 @@ trait BucketConstruct
         foreach ($this->unloadConfig->buckets() as $bucketName => $bucketDefinition) {
             $bucketStack = ucfirst(strtolower($bucketName)).'BucketStack';
             $bucketRef = ['BucketName' => new TaggedValue('GetAtt', "$bucketStack.Outputs.BucketName"),];
+            $bucketAccess = [
+                'private' => 'Private',
+                'pulic-read' => 'PublicRead'
+            ][Arr::get($bucketDefinition, 'access')] ?? 'Private';
 
             $this->append('Policies', [
                 ['S3CrudPolicy' => $bucketRef,],
@@ -28,7 +33,7 @@ trait BucketConstruct
                         'Tags' => $this->unloadConfig->unloadTagsPlain(),
                         'Location' => Cloudformation::compile("storage/bucket.yaml"),
                         'Parameters' => [
-                            'Access' => ucfirst($bucketDefinition['access'] ?? 'private'),
+                            'Access' => $bucketAccess,
                             'Versioning' => ($bucketDefinition['versioning'] ?? 'no') == 'yes',
                             'NoncurrentVersionExpirationInDays' => $bucketDefinition['version-expiration'] ?? 0,
                             'ExpirationInDays' => $bucketDefinition['expiration'] ?? 0,
