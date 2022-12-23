@@ -22,7 +22,7 @@ class InitNetworkTask
         $network->createStack(
             $this->config->vpc(),
             $this->config->nat(),
-            $this->config->vpc(),
+            $this->config->ssh(),
         )->wait();
     }
 }
