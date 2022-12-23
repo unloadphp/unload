@@ -22,17 +22,13 @@ exports.handler = async (event, context, callback) => {
     var deploymentId = event.DeploymentId;
     var lifecycleEventHookExecutionId = event.LifecycleEventHookExecutionId;
     var cliFunction = process.env.CliFunction;
-    var deployCommands = process.env.CliDeployCommand.split("\n")
+    var deployCommands = process.env.CliDeployCommand.split("\n").join('').split('');
 
     console.log("BeforeAllowTraffic cliFunction: " + cliFunction);
     console.log("BeforeAllowTraffic deployCommands: " + deployCommands);
 
     var lambdaResult = "Succeeded";
     for (const command of deployCommands) {
-        if (!command.length) {
-            continue;
-        }
-
         console.log("Running: " + command);
 
         var cliParams = {

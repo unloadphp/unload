@@ -74,21 +74,6 @@ class Network
                     ],
                 ];
 
-                if ($requiresSshAccess) {
-                    $resources[$stackName] = [
-                        'Type' => 'AWS::CloudFormation::Stack',
-                        'Properties' => [
-                            'Tags' => $this->unload->unloadGlobalTags(),
-                            'TemplateURL' => $bastionTemplateUrl,
-                            'Parameters' => [
-                                'VpcId' => new TaggedValue('GetAtt', 'VpcStack.Outputs.VPC'),
-                                'VpcCidrBlock' => new TaggedValue('GetAtt', 'VpcStack.Outputs.CidrBlock'),
-                                'VpcSubnetsPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.SubnetsPublic"),
-                            ]
-                        ],
-                    ];
-                }
-
                 continue;
             }
 
@@ -104,6 +89,21 @@ class Network
                         'VpcRouteTablePrivate' => new TaggedValue('GetAtt', "VpcStack.Outputs.RouteTable{$subnetZone}Private"),
                         'VpcSubnetPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.Subnet{$subnetZone}Public"),
                         'IAMUserSSHAccess' => $requiresSshAccess ? 'true' : 'false',
+                    ]
+                ],
+            ];
+        }
+
+        if ($requiresSshAccess) {
+            $resources["BastionSSHInstance"] = [
+                'Type' => 'AWS::CloudFormation::Stack',
+                'Properties' => [
+                    'Tags' => $this->unload->unloadGlobalTags(),
+                    'TemplateURL' => $bastionTemplateUrl,
+                    'Parameters' => [
+                        'VpcId' => new TaggedValue('GetAtt', 'VpcStack.Outputs.VPC'),
+                        'VpcCidrBlock' => new TaggedValue('GetAtt', 'VpcStack.Outputs.CidrBlock'),
+                        'VpcSubnetsPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.SubnetsPublic"),
                     ]
                 ],
             ];
