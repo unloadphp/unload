@@ -24,7 +24,7 @@ class Network
         $this->unload = $unload;
     }
 
-    public function createStack($vpc, $nat): PendingStack
+    public function createStack($vpc, $nat, $requiresSshAccess): PendingStack
     {
         $artifactsBucketName = $this->ci->getArtifactsBucketName();
 
@@ -42,6 +42,12 @@ class Network
             'Body'   => fopen(base_path($natTemplatePath), 'r'),
         ])->get('ObjectURL');
 
+        $bastionTemplatePath = "cloudformation/network/ssh-bastion.yaml";
+        $bastionTemplateUrl = $this->s3->putObject([
+            'Bucket' => $artifactsBucketName,
+            'Key'    => $bastionTemplatePath,
+            'Body'   => fopen(base_path($bastionTemplatePath), 'r'),
+        ])->get('ObjectURL');
 
         $resources = [
             'VpcStack' => [
@@ -67,6 +73,22 @@ class Network
                         ]
                     ],
                 ];
+
+                if ($requiresSshAccess) {
+                    $resources[$stackName] = [
+                        'Type' => 'AWS::CloudFormation::Stack',
+                        'Properties' => [
+                            'Tags' => $this->unload->unloadGlobalTags(),
+                            'TemplateURL' => $bastionTemplateUrl,
+                            'Parameters' => [
+                                'VpcId' => new TaggedValue('GetAtt', 'VpcStack.Outputs.VPC'),
+                                'VpcCidrBlock' => new TaggedValue('GetAtt', 'VpcStack.Outputs.CidrBlock'),
+                                'VpcSubnetsPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.SubnetsPublic"),
+                            ]
+                        ],
+                    ];
+                }
+
                 continue;
             }
 
@@ -81,6 +103,7 @@ class Network
                         'VpcCidrBlock' => new TaggedValue('GetAtt', 'VpcStack.Outputs.CidrBlock'),
                         'VpcRouteTablePrivate' => new TaggedValue('GetAtt', "VpcStack.Outputs.RouteTable{$subnetZone}Private"),
                         'VpcSubnetPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.Subnet{$subnetZone}Public"),
+                        'IAMUserSSHAccess' => $requiresSshAccess ? 'true' : 'false',
                     ]
                 ],
             ];

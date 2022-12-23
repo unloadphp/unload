@@ -19,6 +19,10 @@ class InitNetworkTask
     {
         $ci = new ContinuousIntegration($this->config);
         $network = new Network($this->config, $ci);
-        $network->createStack($this->config->vpc(), $this->config->nat())->wait();
+        $network->createStack(
+            $this->config->vpc(),
+            $this->config->nat(),
+            $this->config->vpc(),
+        )->wait();
     }
 }

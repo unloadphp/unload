@@ -52,4 +52,9 @@ class BootstrapConfig extends UnloadConfig
     {
         return Arr::get($this->config, 'nat');
     }
+
+    public function ssh(): bool
+    {
+        return (bool) Arr::get($this->config, 'ssh', true);
+    }
 }

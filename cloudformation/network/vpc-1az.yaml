@@ -264,9 +264,6 @@ Resources:
       RouteTableIds: [!Ref RouteTableAPrivate, !Ref RouteTableBPrivate]
 
 Outputs:
-  StackName:
-    Description: 'Stack name.'
-    Value: !Sub '${AWS::StackName}'
   NumberOfAZs:
     Description: 'Number of AZs'
     Value: 1

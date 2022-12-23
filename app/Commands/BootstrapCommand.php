@@ -82,10 +82,11 @@ class BootstrapCommand extends Command
 
             $vpc = $this->choice("$envName aws vpc size", ["1az", "2az"], "1az");
             $nat = $this->choice("$envName aws nat type", ["gateway", "instance"], "instance");
+            $ssh = $this->confirm("$envName aws vpc ssh access (allow database connection from internet)", true);
 
             $bootstrap = new BootstrapConfig(compact(
             'region', 'profile', 'env', 'app', 'repositoryUuid',
-                'provider', 'repository', 'branch', 'vpc', 'nat', 'audience', 'php'
+                'provider', 'repository', 'branch', 'vpc', 'nat', 'audience', 'php', 'ssh'
             ));
 
             $tasks->add(new GenerateUnloadTemplateTask($bootstrap));

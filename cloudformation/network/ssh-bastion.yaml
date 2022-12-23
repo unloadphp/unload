@@ -1,6 +1,6 @@
 ---
 # Copyright 2018 widdix GmbH
-# Modification Copyright 2022 unload.sh
+# Modification copyright 2022 unload.sh
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 AWSTemplateFormatVersion: '2010-09-09'
-Description: 'VPC: highly available NAT instance'
+Description: 'VPC: highly available SSH bastion host/instance'
 Parameters:
   VpcCidrBlock:
     Description: 'Vpc Cidr Block'
@@ -22,95 +22,82 @@ Parameters:
   VpcId:
     Description: 'Vpc Ref'
     Type: String
-  VpcRouteTablePrivate:
-    Description: 'Vpc VpcRouteTablePrivate'
-    Type: String
-  VpcSubnetPublic:
-    Description: 'Vpc VpcSubnetPublic'
+  VpcSubnetsPublic:
+    Description: 'Vpc VpcSubnetsPublic'
     Type: String
   IAMUserSSHAccess:
-    Description: 'Synchronize public keys of IAM users to enable personalized SSH access (Doc: https://cloudonaut.io/manage-aws-ec2-ssh-access-with-iam/).'
+    Description: 'Synchronize public keys of IAM users to enable personalized SSH access.'
     Type: String
-    Default: false
+    Default: true
     AllowedValues:
       - true
       - false
-  NATInstanceType:
-    Description: 'Instance type of the NAT instance. Keep in mind that different instances come with different network capabilities.'
+  InstanceType:
+    Description: 'Instance type of the SSH bastion host/instance.'
     Type: String
     Default: 't3.nano'
   LogsRetentionInDays:
     Description: 'Specifies the number of days you want to retain log events.'
     Type: Number
     Default: 14
-    AllowedValues: [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ]
+    AllowedValues: [1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653]
 Mappings:
   RegionMap:
-    'af-south-1':
-      NATAMI: 'ami-007da8686850bd56f'
-    'eu-north-1':
-      NATAMI: 'ami-0a9b1be2951ef12c3'
+    'ap-south-2':
+      AMI: 'ami-06fafa12df66cf763'
     'ap-south-1':
-      NATAMI: 'ami-0e813f885a024399b'
-    'eu-west-3':
-      NATAMI: 'ami-00ec2680d0d697ad0'
-    'eu-west-2':
-      NATAMI: 'ami-011ad77f622e0c2fb'
+      AMI: 'ami-093613b5938a7e47c'
     'eu-south-1':
-      NATAMI: 'ami-0fbbb2c6a4ec1e30d'
-    'eu-west-1':
-      NATAMI: 'ami-0a56c2c5f57ae7f9a'
-    'ap-northeast-3':
-      NATAMI: 'ami-05bd005a72b2ad111'
-    'ap-northeast-2':
-      NATAMI: 'ami-0e3e1b45a02a17920'
-    'me-south-1':
-      NATAMI: 'ami-03cba91974d807acf'
-    'ap-northeast-1':
-      NATAMI: 'ami-0a7529bfaaf195a8c'
-    'sa-east-1':
-      NATAMI: 'ami-08936d1fc0040fc58'
+      AMI: 'ami-01bccc3fb927d1381'
+    'eu-south-2':
+      AMI: 'ami-06dead0e885b328ac'
+    'me-central-1':
+      AMI: 'ami-021e780725d0ac833'
     'ca-central-1':
-      NATAMI: 'ami-0e9d1e46c539f526c'
-    'ap-east-1':
-      NATAMI: 'ami-0c4e0cd8bb5f12fe9'
-    'ap-southeast-1':
-      NATAMI: 'ami-018cd92db227b86e1'
-    'ap-southeast-2':
-      NATAMI: 'ami-0e72186c833bb56c0'
-    'ap-southeast-3':
-      NATAMI: 'ami-060fa367685ed9d0a'
+      AMI: 'ami-01aca21057a013fd0'
     'eu-central-1':
-      NATAMI: 'ami-00371432b1bceae1d'
-    'us-east-1':
-      NATAMI: 'ami-05ed49079214c998a'
-    'us-east-2':
-      NATAMI: 'ami-0a8c79bd758e15082'
+      AMI: 'ami-04a2b113b98bfa0e8'
+    'eu-central-2':
+      AMI: 'ami-0ec30364fff59d57e'
     'us-west-1':
-      NATAMI: 'ami-01a3c8305ad5936a2'
+      AMI: 'ami-0fc161d91b03576d0'
     'us-west-2':
-      NATAMI: 'ami-054c198626cd4a7c6'
+      AMI: 'ami-0849a313b038afda0'
+    'af-south-1':
+      AMI: 'ami-056ac3c10cb2283e3'
+    'eu-north-1':
+      AMI: 'ami-0cf1dfc38e4c28f7d'
+    'eu-west-3':
+      AMI: 'ami-065764f88497fd546'
+    'eu-west-2':
+      AMI: 'ami-02a1ade676420a021'
+    'eu-west-1':
+      AMI: 'ami-08c149f9b2ace933d'
+    'ap-northeast-3':
+      AMI: 'ami-0f4e7c835783812e0'
+    'ap-northeast-2':
+      AMI: 'ami-0a1d2fce2d3ca6e35'
+    'me-south-1':
+      AMI: 'ami-0d3f9b381d27950bc'
+    'ap-northeast-1':
+      AMI: 'ami-0b8b7786ce75a2b4f'
+    'sa-east-1':
+      AMI: 'ami-03faa3bc786326505'
+    'ap-east-1':
+      AMI: 'ami-00a7702abd217ea2e'
+    'ap-southeast-1':
+      AMI: 'ami-02c7d3513f9fdf3f6'
+    'ap-southeast-2':
+      AMI: 'ami-0043df2e553ad12b6'
+    'ap-southeast-3':
+      AMI: 'ami-089ffeb63504837b6'
+    'us-east-1':
+      AMI: 'ami-0fe472d8a85bc7b0e'
+    'us-east-2':
+      AMI: 'ami-0ea1d45dcdd47edf6'
 Conditions:
-  HasIAMUserSSHAccess: !Equals [ !Ref IAMUserSSHAccess, 'true' ]
+  HasIAMUserSSHAccess: !Equals [!Ref IAMUserSSHAccess, 'true']
 Resources:
-  NATInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
-    DependsOn:
-      - EIP
-      - Route
-    Properties:
-      Roles:
-        - !Ref NATIAMRole
-  MockNetworkInterface:
-    Type: 'AWS::EC2::NetworkInterface'
-    Properties:
-      SubnetId: !Ref VpcSubnetPublic
-  Route:
-    Type: 'AWS::EC2::Route'
-    Properties:
-      RouteTableId: !Ref VpcRouteTablePrivate
-      DestinationCidrBlock: '0.0.0.0/0'
-      NetworkInterfaceId: !Ref MockNetworkInterface
   EIP:
     Type: 'AWS::EC2::EIP'
     Properties:
@@ -119,65 +106,22 @@ Resources:
     Type: 'AWS::Logs::LogGroup'
     Properties:
       RetentionInDays: !Ref LogsRetentionInDays
-  NATSecurityGroup:
+  SecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       GroupDescription: !Ref 'AWS::StackName'
-      SecurityGroupEgress:
-        - IpProtocol: udp
-          FromPort: 123
-          ToPort: 123
-          CidrIp: '0.0.0.0/0'
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: '0.0.0.0/0'
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: '0.0.0.0/0'
       SecurityGroupIngress:
-        - IpProtocol: udp
-          FromPort: 123
-          ToPort: 123
-          CidrIp: !Ref VpcCidrBlock
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: !Ref VpcCidrBlock
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: !Ref VpcCidrBlock
+          FromPort: 22
+          ToPort: 22
+          CidrIp: '0.0.0.0/0'
       VpcId: !Ref VpcId
-  NATSecurityGroupAccessMysql:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Condition: HasIAMUserSSHAccess
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
     Properties:
-      GroupId: !Ref NATSecurityGroup
-      IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
-      CidrIp: !Ref VpcCidrBlock
-  NATSecurityGroupAccessRedis:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Condition: HasIAMUserSSHAccess
-    Properties:
-      GroupId: !Ref NATSecurityGroup
-      IpProtocol: tcp
-      FromPort: 6379
-      ToPort: 6379
-      CidrIp: !Ref VpcCidrBlock
-  NATSecurityGroupInSSHWorld:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Condition: HasIAMUserSSHAccess
-    Properties:
-      GroupId: !Ref NATSecurityGroup
-      IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      CidrIp: '0.0.0.0/0'
-  NATIAMRole:
+      Roles:
+        - !Ref IAMRole
+  IAMRole:
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
@@ -188,18 +132,13 @@ Resources:
               Service: 'ec2.amazonaws.com'
             Action: 'sts:AssumeRole'
       Policies:
-        - PolicyName: ec2
+        - PolicyName: 'ec2'
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Sid: Stmt1425023276000
-                Effect: Allow
+              - Effect: Allow
                 Action:
                   - 'ec2:AssociateAddress'
-                  - 'ec2:ModifyInstanceAttribute'
-                  - 'ec2:CreateRoute'
-                  - 'ec2:ReplaceRoute'
-                  - 'ec2:DeleteRoute'
                 Resource:
                   - '*'
         - PolicyName: logs
@@ -213,12 +152,12 @@ Resources:
                   - 'logs:PutLogEvents'
                   - 'logs:DescribeLogStreams'
                 Resource: !GetAtt 'Logs.Arn'
-  NATIAMPolicySSHAccess:
+  IAMPolicySSHAccess:
     Type: 'AWS::IAM::Policy'
     Condition: HasIAMUserSSHAccess
     Properties:
       Roles:
-        - !Ref NATIAMRole
+        - !Ref IAMRole
       PolicyName: iam
       PolicyDocument:
         Version: '2012-10-17'
@@ -239,11 +178,11 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Init':
         configSets:
-          default: !If [ HasIAMUserSSHAccess, [ awslogs, ssh-access, config ], [ awslogs, config ] ]
+          default: !If [HasIAMUserSSHAccess, [awslogs, ssh-access, config], [awslogs, config]]
         awslogs:
           packages:
             yum:
-              awslogs: [ ]
+              awslogs: []
           files:
             '/etc/awslogs/awscli.conf':
               content: !Sub |
@@ -258,30 +197,28 @@ Resources:
               content: !Sub |
                 [general]
                 state_file = /var/lib/awslogs/agent-state
-                [/var/log/messages]
-                datetime_format = %b %d %H:%M:%S
-                file = /var/log/messages
-                log_stream_name = {instance_id}/var/log/messages
-                log_group_name = ${Logs}
-                [/var/log/secure]
-                datetime_format = %b %d %H:%M:%S
-                file = /var/log/secure
-                log_stream_name = {instance_id}/var/log/secure
-                log_group_name = ${Logs}
-                [/var/log/cron]
-                datetime_format = %b %d %H:%M:%S
-                file = /var/log/cron
-                log_stream_name = {instance_id}/var/log/cron
-                log_group_name = ${Logs}
-                [/var/log/cloud-init.log]
-                datetime_format = %b %d %H:%M:%S
-                file = /var/log/cloud-init.log
-                log_stream_name = {instance_id}/var/log/cloud-init.log
-                log_group_name = ${Logs}
-                [/var/log/cfn-init.log]
+                [/var/log/amazon/ssm/amazon-ssm-agent.log]
                 datetime_format = %Y-%m-%d %H:%M:%S
-                file = /var/log/cfn-init.log
-                log_stream_name = {instance_id}/var/log/cfn-init.log
+                file = /var/log/amazon/ssm/amazon-ssm-agent.log
+                log_stream_name = {instance_id}/var/log/amazon/ssm/amazon-ssm-agent.log
+                log_group_name = ${Logs}
+                [/var/log/amazon/ssm/errors.log]
+                datetime_format = %Y-%m-%d %H:%M:%S
+                file = /var/log/amazon/ssm/errors.log
+                log_stream_name = {instance_id}/var/log/amazon/ssm/errors.log
+                log_group_name = ${Logs}
+                [/var/log/audit/audit.log]
+                file = /var/log/audit/audit.log
+                log_stream_name = {instance_id}/var/log/audit/audit.log
+                log_group_name = ${Logs}
+                [/var/log/awslogs.log]
+                datetime_format = %Y-%m-%d %H:%M:%S
+                file = /var/log/awslogs.log
+                log_stream_name = {instance_id}/var/log/awslogs.log
+                log_group_name = ${Logs}
+                [/var/log/boot.log]
+                file = /var/log/boot.log
+                log_stream_name = {instance_id}/var/log/boot.log
                 log_group_name = ${Logs}
                 [/var/log/cfn-hup.log]
                 datetime_format = %Y-%m-%d %H:%M:%S
@@ -293,20 +230,64 @@ Resources:
                 file = /var/log/cfn-init-cmd.log
                 log_stream_name = {instance_id}/var/log/cfn-init-cmd.log
                 log_group_name = ${Logs}
+                [/var/log/cfn-init.log]
+                datetime_format = %Y-%m-%d %H:%M:%S
+                file = /var/log/cfn-init.log
+                log_stream_name = {instance_id}/var/log/cfn-init.log
+                log_group_name = ${Logs}
+                [/var/log/cfn-wire.log]
+                datetime_format = %Y-%m-%d %H:%M:%S
+                file = /var/log/cfn-wire.log
+                log_stream_name = {instance_id}/var/log/cfn-wire.log
+                log_group_name = ${Logs}
                 [/var/log/cloud-init-output.log]
                 file = /var/log/cloud-init-output.log
                 log_stream_name = {instance_id}/var/log/cloud-init-output.log
                 log_group_name = ${Logs}
+                [/var/log/cloud-init.log]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/cloud-init.log
+                log_stream_name = {instance_id}/var/log/cloud-init.log
+                log_group_name = ${Logs}
+                [/var/log/cron]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/cron
+                log_stream_name = {instance_id}/var/log/cron
+                log_group_name = ${Logs}
                 [/var/log/dmesg]
                 file = /var/log/dmesg
                 log_stream_name = {instance_id}/var/log/dmesg
+                log_group_name = ${Logs}
+                [/var/log/grubby_prune_debug]
+                file = /var/log/grubby_prune_debug
+                log_stream_name = {instance_id}/var/log/grubby_prune_debug
+                log_group_name = ${Logs}
+                [/var/log/maillog]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/maillog
+                log_stream_name = {instance_id}/var/log/maillog
+                log_group_name = ${Logs}
+                [/var/log/messages]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/messages
+                log_stream_name = {instance_id}/var/log/messages
+                log_group_name = ${Logs}
+                [/var/log/secure]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/secure
+                log_stream_name = {instance_id}/var/log/secure
+                log_group_name = ${Logs}
+                [/var/log/yum.log]
+                datetime_format = %b %d %H:%M:%S
+                file = /var/log/yum.log
+                log_stream_name = {instance_id}/var/log/yum.log
                 log_group_name = ${Logs}
               mode: '000644'
               owner: root
               group: root
           services:
             sysvinit:
-              awslogs:
+              awslogsd:
                 enabled: true
                 ensureRunning: true
                 packages:
@@ -344,11 +325,9 @@ Resources:
                   SaveUserName=${SaveUserName//","/".comma."}
                   SaveUserName=${SaveUserName//"@"/".at."}
                   if [ "${#SaveUserName}" -le "32" ]; then
-                    if ! id -u "$SaveUserName" >/dev/null 2>&1; then
-                      #sudo will read each file in /etc/sudoers.d, skipping file names that end in ‘~’ or contain a ‘.’ character to avoid causing problems with package manager or editor temporary/backup files.
-                      SaveUserFileName=$(echo "$SaveUserName" | tr "." " ")
+                    if ! id -u "$SaveUserName" > /dev/null 2>&1; then
+                      # don't grant sudo rights on bastion host!
                       /usr/sbin/useradd "$SaveUserName"
-                      echo "$SaveUserName ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/$SaveUserFileName"
                     fi
                   else
                     echo "Can not import IAM user ${SaveUserName}. User name is longer than 32 characters."
@@ -382,6 +361,9 @@ Resources:
                   - 'a_configure_sshd_command'
                   - 'b_configure_sshd_commanduser'
         config:
+          packages:
+            yum:
+              mariadb: []
           files:
             '/etc/cfn/cfn-hup.conf':
               content: !Sub |
@@ -407,7 +389,6 @@ Resources:
                 files:
                   - '/etc/cfn/cfn-hup.conf'
                   - '/etc/cfn/hooks.d/cfn-auto-reloader.conf'
-
     Properties:
       LaunchTemplateData:
         BlockDeviceMappings:
@@ -416,33 +397,26 @@ Resources:
               Encrypted: true
               VolumeType: gp3
         IamInstanceProfile:
-          Name: !Ref NATInstanceProfile
-        ImageId: !FindInMap [ RegionMap, !Ref 'AWS::Region', NATAMI ]
-        InstanceType: !Ref NATInstanceType
+          Name: !Ref InstanceProfile
+        ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+        InstanceType: !Ref InstanceType
         MetadataOptions:
           HttpTokens: required
         NetworkInterfaces:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
             Groups:
-              - !Ref NATSecurityGroup
+              - !Ref SecurityGroup
         UserData:
-          'Fn::Base64': !Sub
-            - |
-              #!/bin/bash -ex
-              trap '/opt/aws/bin/cfn-signal -e 1 --region ${Region} --stack ${StackName} --resource NATAutoScalingGroup' ERR
-              TOKEN=$(curl --silent --max-time 60 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 30")
-              INSTANCEID=$(curl --silent --max-time 60 -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
-              aws --region ${Region} ec2 associate-address --instance-id $INSTANCEID --allocation-id ${EIPAllocationId}
-              aws --region ${Region} ec2 modify-instance-attribute --instance-id $INSTANCEID --source-dest-check "{\"Value\": false}"
-              aws --region ${Region} ec2 replace-route --route-table-id ${RouteTablePrivate} --destination-cidr-block "0.0.0.0/0" --instance-id $INSTANCEID || aws --region ${Region} ec2 create-route --route-table-id ${RouteTablePrivate} --destination-cidr-block "0.0.0.0/0" --instance-id $INSTANCEID
-              /opt/aws/bin/cfn-init -v --stack ${StackName} --resource LaunchTemplate --region ${Region}
-              /opt/aws/bin/cfn-signal -e 0 --region ${Region} --stack ${StackName} --resource NATAutoScalingGroup
-            - RouteTablePrivate: !Ref VpcRouteTablePrivate
-              Region: !Ref 'AWS::Region'
-              StackName: !Ref 'AWS::StackName'
-              EIPAllocationId: !GetAtt 'EIP.AllocationId'
-  NATAutoScalingGroup:
+          'Fn::Base64': !Sub |
+            #!/bin/bash -ex
+            trap '/opt/aws/bin/cfn-signal -e 1 --stack ${AWS::StackName} --resource AutoScalingGroup --region ${AWS::Region}' ERR
+            TOKEN=$(curl --silent --max-time 60 -X PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 30")
+            INSTANCEID=$(curl --silent --max-time 60 -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/instance-id)
+            aws --region ${AWS::Region} ec2 associate-address --instance-id $INSTANCEID --allocation-id ${EIP.AllocationId}
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource LaunchTemplate --region ${AWS::Region}
+            /opt/aws/bin/cfn-signal -e 0 --stack ${AWS::StackName} --resource AutoScalingGroup --region ${AWS::Region}
+  AutoScalingGroup:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
       LaunchTemplate:
@@ -453,11 +427,10 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub
-            - 'NAT instance ${CidrBlock}'
+            - 'SSH bastion host/instance ${CidrBlock}'
             - CidrBlock: !Ref VpcCidrBlock
           PropagateAtLaunch: true
-      VPCZoneIdentifier:
-        - !Ref VpcSubnetPublic
+      VPCZoneIdentifier: !Split [',', !Ref VpcSubnetsPublic]
     CreationPolicy:
       ResourceSignal:
         Count: 1
@@ -473,8 +446,13 @@ Resources:
           - ScheduledActions
         WaitOnResourceSignals: true
 Outputs:
+  SecurityGroup:
+    Description: 'Use this Security Group to reference incoming traffic from the SSH bastion host/instance.'
+    Value: !Ref SecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroup'
   IPAddress:
-    Description: 'The public IP address of the NAT instance.'
+    Description: 'The public IP address of the SSH bastion host/instance.'
     Value: !Ref EIP
     Export:
       Name: !Sub '${AWS::StackName}-IPAddress'

@@ -158,9 +158,6 @@ Resources:
       Threshold: 36 # hard limit is 45 Gbit/s
       TreatMissingData: notBreaching
 Outputs:
-  StackName:
-    Description: 'Stack name.'
-    Value: !Sub '${AWS::StackName}'
   IPAddress:
     Description: 'The public IP address of the NAT gateway.'
     Value: !Ref NatEIP

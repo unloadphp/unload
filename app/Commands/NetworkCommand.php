@@ -8,7 +8,7 @@ use App\Tasks\InitNetworkTask;
 
 class NetworkCommand extends Command
 {
-    protected $signature = 'network {--vpc=} {--nat=} {--region=} {--profile=} {--env=} {--app=}';
+    protected $signature = 'network {--vpc=} {--nat=} {--region=} {--profile=} {--env=} {--app=} {--ssh}';
     protected $description = 'Deploy or update environment network stack';
 
     public function handle(): void

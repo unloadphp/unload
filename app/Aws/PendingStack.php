@@ -39,7 +39,7 @@ class PendingStack
             }
 
             $stackStatus = $this->cloudformation->describeStacks(['StackName' => $this->stackName])->search('Stacks[0].StackStatus');
-            if (in_array($stackStatus, ['CREATE_COMPLETE', 'UPDATE_COMPLETE', 'DELETE_COMPLETE'])) {
+            if (in_array($stackStatus, ['CREATE_COMPLETE', 'UPDATE_COMPLETE', 'DELETE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE'])) {
                 $stackInProgress = false;
             }
 
