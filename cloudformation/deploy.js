@@ -22,7 +22,7 @@ exports.handler = async (event, context, callback) => {
     var deploymentId = event.DeploymentId;
     var lifecycleEventHookExecutionId = event.LifecycleEventHookExecutionId;
     var cliFunction = process.env.CliFunction;
-    var deployCommands = process.env.CliDeployCommand.split("\n").join('').split('');
+    var deployCommands = process.env.CliDeployCommand.split("\n").filter(Boolean);
 
     console.log("BeforeAllowTraffic cliFunction: " + cliFunction);
     console.log("BeforeAllowTraffic deployCommands: " + deployCommands);
