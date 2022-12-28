@@ -17,6 +17,7 @@ use App\Tasks\GenerateSamConfigTask;
 use App\Tasks\GenerateSamTemplateTask;
 use App\Tasks\PrepareBuildDirectoryTask;
 use App\Tasks\SetupEnvFileTask;
+use App\Tasks\SetupPhpIniFileTask;
 
 class BuildCommand extends Command
 {
@@ -40,6 +41,7 @@ class BuildCommand extends Command
             new CleanupVendorTask(),
             new EmptyAwsCredentialTask(),
             new SetupEnvFileTask(),
+            new SetupPhpIniFileTask(),
             new GenerateSamTemplateTask(),
             new ExecuteSamBuildTask(),
         ])->execute($this);
