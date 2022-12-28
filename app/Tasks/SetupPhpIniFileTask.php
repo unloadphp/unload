@@ -12,16 +12,16 @@ class SetupPhpIniFileTask
     {
         $phpIniPath = Path::tmpApp('php/conf.d/php.ini');
 
-        if (!File::exists($phpIniPath)) {
-            return;
-        }
-
         /** Extend default bref php ini */
         File::ensureDirectoryExists(Path::tmpApp('php/conf.d'));
-        File::put($phpIniPath, <<<PHPINI
+        File::prepend($phpIniPath, <<<PHPINI
+opcache.validate_permission=0
 opcache.validate_timestamps=0
 opcache.enable_cli=1
 expose_php=off
+opcache.file_cache="/tmp"
+opcache.enable_file_override=1
+opcache.file_cache_consistency_checks=0
 PHPINI
 );
     }
