@@ -12,10 +12,12 @@ class SetupPhpIniFileTask
     {
         $phpIniPath = Path::tmpApp('php/conf.d/php.ini');
 
-        /** Extend default bref php ini */
+        /**
+         * Extend default bref php ini
+         * @see https://github.com/brefphp/bref/blob/master/runtime/layers/fpm/php.ini
+         */
         File::ensureDirectoryExists(Path::tmpApp('php/conf.d'));
         File::prepend($phpIniPath, <<<PHPINI
-opcache.validate_permission=0
 opcache.validate_timestamps=0
 opcache.enable_cli=1
 expose_php=off
