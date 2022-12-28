@@ -17,12 +17,35 @@ const AWS = require('aws-sdk');
 const codedeploy = new AWS.CodeDeploy({apiVersion: '2014-10-06'});
 var lambda = new AWS.Lambda();
 
-exports.handler = async (event, context, callback) => {
+async function warmHook(concurrency = null) {
+    let invocations = []
+    let funcName = process.env.WEB_FUNCTION;
+    let funcConcurrency = concurrency || process.env.WEB_CONCURRENCY;
 
-    var deploymentId = event.DeploymentId;
-    var lifecycleEventHookExecutionId = event.LifecycleEventHookExecutionId;
-    var cliFunction = process.env.CliFunction;
-    var deployCommands = process.env.CliDeployCommand.split("\n").filter(Boolean);
+    console.log('Warming function: ' + funcName);
+    console.log('Warming concurrency: ' + funcConcurrency);
+
+    for (let i=0; i <= funcConcurrency; i++) {
+        let params = {
+            FunctionName: funcName,
+            InvocationType: 'Event',
+            LogType: 'None',
+            Payload: Buffer.from(JSON.stringify({
+                warmer: true
+            }))
+        };
+
+        invocations.push(lambda.invoke(params).promise());
+
+    }
+
+    let result = await Promise.all(invocations).then(() => true);
+    console.log('Warming finished: ' + result);
+}
+
+async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
+    var cliFunction = process.env.CLI_FUNCTION;
+    var deployCommands = process.env.CLI_COMMAND.split("\n").filter(Boolean);
 
     console.log("BeforeAllowTraffic cliFunction: " + cliFunction);
     console.log("BeforeAllowTraffic deployCommands: " + deployCommands);
@@ -63,8 +86,28 @@ exports.handler = async (event, context, callback) => {
     };
 
     // // Pass CodeDeploy the prepared validation test results.
-    await codedeploy.putLifecycleEventHookExecutionStatus(params).promise();
+    return await codedeploy.putLifecycleEventHookExecutionStatus(params).promise();
+}
 
-    console.log("CodeDeploy status updated successfully");
-    callback(null, "CodeDeploy status updated successfully");
+exports.handler = async (event, context, callback) => {
+
+    let deploymentId = event.DeploymentId;
+    let lifecycleEventHookExecutionId = event.LifecycleEventHookExecutionId;
+
+    if (deploymentId) {
+        await deployHook(deploymentId, lifecycleEventHookExecutionId);
+        await warmHook()
+        callback(null, "deployHook function finished");
+        return;
+    }
+
+    var warm = event.Warmer;
+    var warmConcurrency = event.WarmerConcurrency;
+
+    if (warm) {
+        await warmHook(warmConcurrency)
+        callback(null, "warmHook function finished");
+    }
+
+    throw new Error("Unknown event: " + JSON.encode(event))
 }

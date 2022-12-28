@@ -158,7 +158,10 @@ class SamTemplate extends Template
                                     [
                                         'Effect' => 'Allow',
                                         'Action' => ['lambda:InvokeFunction'],
-                                        'Resource' => new TaggedValue('Sub', ['${CliFunctionArn}:*',  ['CliFunctionArn' => new TaggedValue('GetAtt', 'CliFunction.Arn')]]),
+                                        'Resource' => [
+                                            new TaggedValue('Sub', ['${CliFunctionArn}:*',  ['CliFunctionArn' => new TaggedValue('GetAtt', 'CliFunction.Arn')]]),
+                                            new TaggedValue('Sub', ['${WebFunctionArn}:*',  ['WebFunctionArn' => new TaggedValue('GetAtt', 'WebFunction.Arn')]]),
+                                        ],
                                     ]
                                 ]
                             ]
@@ -169,11 +172,14 @@ class SamTemplate extends Template
                         ],
                         'Environment' => [
                             'Variables' => [
-                                'CliFunction' => new TaggedValue('Ref', 'CliFunction.Version'),
-                                'CliDeployCommand' => $this->unloadConfig->deploy(),
+                                'CLI_FUNCTION' => new TaggedValue('Ref', 'CliFunction.Version'),
+                                'CLI_COMMAND' => $this->unloadConfig->deploy(),
+                                'WEB_FUNCTION' => new TaggedValue('Ref', 'WebFunction.Version'),
+                                'WEB_CONCURRENCY' => $this->unloadConfig->defaultWarm(),
                             ],
                         ],
                         'Runtime' => 'nodejs12.x',
+                        'Timeout' => 900,
                         'InlineCode' => Cloudformation::get('deploy.js'),
                         'Handler' => 'index.handler',
                     ]),

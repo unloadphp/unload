@@ -144,10 +144,18 @@ class UnloadConfig
         return '8.1';
     }
 
-    public function warm(): bool
+    public function warm(): int|array
     {
-        return Arr::get($this->config, 'warm', 'no') == 'yes';
+        return Arr::get($this->config, 'warm', 0);
     }
+
+    public function defaultWarm(): int
+    {
+        $warm = $this->warm();
+        $default = is_array($warm) ? max(Arr::get($warm, 'day'), Arr::get($warm, 'night')) : $warm;
+        return (int) $default;
+    }
+
 
     public function network(): string|false
     {
