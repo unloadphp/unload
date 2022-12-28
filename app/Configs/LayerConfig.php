@@ -10,6 +10,8 @@ class LayerConfig
     private array $layers;
     private array $extensions;
 
+    const PRELOADED_BUT_DISABLED = ['intl', 'apcu', 'pdo_pgsql'];
+
     public function __construct(UnloadConfig $unload)
     {
         $this->unload = $unload;
@@ -46,6 +48,10 @@ class LayerConfig
         $layers = [];
 
         foreach ($this->unload->extensions() as $extension) {
+            if (in_array($extension, self::PRELOADED_BUT_DISABLED)) {
+                continue;
+            }
+
             $layer = "{$this->prefix()}{$extension}-php-{$this->version()}";
 
             if (empty($this->extensions[$layer])) {

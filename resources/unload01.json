@@ -84,7 +84,6 @@
                     "openswoole",
                     "oci8",
                     "pcov",
-                    "pgsql",
                     "rdkafka",
                     "redis",
                     "redis-igbinary",
@@ -97,10 +96,13 @@
                     "tidy",
                     "uuid",
                     "xdebug",
-                    "yaml"
+                    "yaml",
+                    "pgsql",
+                    "intl",
+                    "apcu",
+                    "pdo_pgsql"
                 ]
             },
-            "maxItems": 3,
             "uniqueItems": true
         },
         "tmp": {

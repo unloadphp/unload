@@ -3,14 +3,23 @@
 namespace App\Tasks;
 
 use App\Aws\SystemManager;
+use App\Configs\LayerConfig;
+use App\Configs\UnloadConfig;
 use App\Path;
 use Illuminate\Support\Facades\File;
 
 class SetupPhpIniFileTask
 {
-    public function handle(SystemManager $parameterStore): void
+    public function handle(UnloadConfig $unload): void
     {
         $phpIniPath = Path::tmpApp('php/conf.d/php.ini');
+
+        $extensions = '';
+        foreach($unload->extensions() as $extension) {
+            if (in_array($extension, LayerConfig::PRELOADED_BUT_DISABLED)) {
+                $extensions .= "extension=$extension\n";
+            }
+        }
 
         /**
          * Extend default bref php ini
@@ -24,6 +33,9 @@ expose_php=off
 opcache.file_cache="/tmp"
 opcache.enable_file_override=1
 opcache.file_cache_consistency_checks=0
+
+$extensions
+
 PHPINI
 );
     }
