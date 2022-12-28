@@ -3,34 +3,60 @@
 namespace App\Configs;
 
 use App\Path;
-use Illuminate\Support\Facades\File;
 
 class LayerConfig
 {
     private UnloadConfig $unload;
     private array $layers;
+    private array $extensions;
 
     public function __construct(UnloadConfig $unload)
     {
-        $layersPath = Path::layersFile();
-        if (!File::exists(Path::layersFile())) {
-            throw new \Exception("Failed to load bref layers from {$layersPath}. Make sure you have bref package installed in the project folder.");
-        }
-
         $this->unload = $unload;
-        $this->layers = json_decode(file_get_contents($layersPath), true);
+        $this->layers = json_decode(file_get_contents(Path::layersFile()), true);
+        $this->extensions = json_decode(file_get_contents(Path::extensionFile()), true);
     }
 
     public function php(): string
     {
-        $version = $this->layers["php-{$this->version()}"][$this->unload->region()];
-        return "arn:aws:lambda:{$this->unload->region()}:209497400698:layer:php-{$this->version()}:$version";
+        $layer = "{$this->prefix()}php-{$this->version()}";
+        $version = $this->layers[$layer][$this->unload->region()];
+
+        if (empty($this->layers[$layer])) {
+            throw new \Exception("Layer $layer not supported. See https://runtimes.bref.sh.");
+        }
+
+        return "arn:aws:lambda:{$this->unload->region()}:209497400698:layer:$layer:$version";
     }
 
     public function fpm(): string
     {
-        $version = $this->layers["php-{$this->version()}-fpm"][$this->unload->region()];
-        return "arn:aws:lambda:{$this->unload->region()}:209497400698:layer:php-{$this->version()}-fpm:$version";
+        $layer = "{$this->prefix()}php-{$this->version()}-fpm";
+
+        if (empty($this->layers[$layer])) {
+            throw new \Exception("Layer $layer not supported. See https://runtimes.bref.sh.");
+        }
+
+        $version = $this->layers[$layer][$this->unload->region()];
+        return "arn:aws:lambda:{$this->unload->region()}:209497400698:layer:$layer:$version";
+    }
+
+    public function extensions(): array
+    {
+        $layers = [];
+
+        foreach ($this->unload->extensions() as $extension) {
+            $layer = "{$this->prefix()}{$extension}-php-{$this->version()}";
+
+            if (empty($this->extensions[$layer])) {
+                throw new \Exception("Extension $extension not supported. See https://github.com/brefphp/extra-php-extensions.");
+            }
+
+            $version = $this->extensions[$layer][$this->unload->region()];
+            $layers[] = "arn:aws:lambda:{$this->unload->region()}:403367587399:layer:$layer:$version";
+        }
+
+        return $layers;
     }
 
     public function console(): string
@@ -42,5 +68,10 @@ class LayerConfig
     public function version(): string
     {
         return number_format($this->unload->php(), 1, '', ' ');
+    }
+
+    protected function prefix(): string
+    {
+        return $this->unload->runtime() == 'provided.arm' ? 'arm-' : '';
     }
 }

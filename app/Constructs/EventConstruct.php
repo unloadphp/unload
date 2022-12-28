@@ -6,18 +6,6 @@ trait EventConstruct
 {
     protected function setupEvents(): self
     {
-//        $this->append('Resources.WebFunction.Properties.Events.HttpApi', [
-//            'Type' => 'HttpApi',
-//            'Properties' => [
-//                'Method' => 'ANY',
-//                'Path' => '/{proxy+}',
-//                'RouteSettings' => [
-//                    'ThrottlingBurstLimit' => $this->unloadConfig->firewallBurstLimit(),
-//                    'ThrottlingRateLimit' => $this->unloadConfig->firewallRateLimit(),
-//                ]
-//            ]
-//        ]);
-
         $this->append('Resources.CliFunction.Properties.Events.Schedule', [
             'Type' => 'Schedule',
             'Properties' => [

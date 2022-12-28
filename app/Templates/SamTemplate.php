@@ -84,9 +84,6 @@ class SamTemplate extends Template
                     'Runtime' => $this->unloadConfig->runtime(),
                     'Tags' => $this->unloadConfig->unloadTagsPlain(),
                 ],
-//                'HttpApi' => [
-//                    'Tags' => $this->unloadConfig->unloadTagsPlain(),
-//                ]
             ],
             'Resources' => [
                 'WebFunction' => [
@@ -113,9 +110,9 @@ class SamTemplate extends Template
                         'EphemeralStorage' => [
                             'Size' => $this->unloadConfig->webFunctionTmp(),
                         ],
-                        'Layers' => [
+                        'Layers' => array_merge([
                             $this->layer->fpm(),
-                        ],
+                        ], $this->layer->extensions()),
                     ]),
                 ],
                 'CliFunction' => [
@@ -133,10 +130,10 @@ class SamTemplate extends Template
                         'EphemeralStorage' => [
                             'Size' => $this->unloadConfig->cliFunctionTmp(),
                         ],
-                        'Layers' => [
+                        'Layers' => array_merge([
                             $this->layer->php(),
                             $this->layer->console(),
-                        ],
+                        ], $this->layer->extensions())
                     ]),
                 ],
                 'DeployFunction' => [

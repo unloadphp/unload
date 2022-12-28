@@ -41,8 +41,8 @@ class UnloadConfig
             $validated = $validator->validate(Helper::toJSON($config), 'https://unload.dev/unload01.json');
 
             if (!$validated->isValid()) {
-                print_r((new ErrorFormatter())->format($validated->error()));
-                die;
+                $validationMessages = implode("\n  ", (new ErrorFormatter())->formatFlat($validated->error()));
+                throw new \Exception($validationMessages);
             }
         }
 
@@ -182,6 +182,11 @@ class UnloadConfig
     public function queues(): array
     {
         return (array) Arr::get($this->config, 'queues', []);
+    }
+
+    public function extensions(): array
+    {
+        return (array) Arr::get($this->config, 'extensions', []);
     }
 
     public function domains(): array

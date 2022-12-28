@@ -104,6 +104,11 @@ class Path
         return self::tmpApp('/vendor/bref/bref/layers.json');
     }
 
+    public static function extensionFile(): string
+    {
+        return 'https://raw.githubusercontent.com/brefphp/extra-php-extensions/master/layers.json';
+    }
+
     public static function unloadTemplatePath(?string $config, bool $relative = false): string
     {
         if (str_contains($config, '.yaml')) {

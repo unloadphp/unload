@@ -41,7 +41,7 @@
         },
         "runtime": {
             "type": "string",
-            "enum": ["provided"]
+            "enum": ["provided", "provided.arm"]
         },
         "memory": {
             "type": "integer",
@@ -53,6 +53,56 @@
             "minimum": 1,
             "maximum": 900
         },
+        "extensions": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "enum" : [
+                    "amqp",
+                    "blackfire",
+                    "calendar",
+                    "cassandra",
+                    "decimal",
+                    "ds",
+                    "elastic-apm",
+                    "gd",
+                    "gnupg",
+                    "gmp",
+                    "grpc",
+                    "igbinary",
+                    "imagick",
+                    "imap",
+                    "ldap",
+                    "mailparse",
+                    "maxminddb",
+                    "memcache",
+                    "memcached",
+                    "mongodb",
+                    "msgpack",
+                    "newrelic",
+                    "odbc-snowflake",
+                    "openswoole",
+                    "oci8",
+                    "pcov",
+                    "pgsql",
+                    "rdkafka",
+                    "redis",
+                    "redis-igbinary",
+                    "scoutapm",
+                    "scrypt",
+                    "spx",
+                    "ssh2",
+                    "symfony-runtime",
+                    "sqlsrv",
+                    "tidy",
+                    "uuid",
+                    "xdebug",
+                    "yaml"
+                ]
+            },
+            "maxItems": 3,
+            "uniqueItems": true
+        },
         "tmp": {
             "type": "integer",
             "minimum": 512,
@@ -61,7 +111,7 @@
         },
         "php": {
             "type": "number",
-            "enum": [7.3, 7.4, 8, 8.1]
+            "enum": [8.0, 8.1, 8.2]
         },
         "database": {
             "type": "object",

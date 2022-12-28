@@ -12,6 +12,7 @@ class ExecuteBuildTask
 {
     public function handle(UnloadConfig $config, OutputStyle $output): void
     {
+        $output->newLine();
         $commands = $config->build();
         if (!$commands) {
             $commands = $this->defaultBuildCommands();

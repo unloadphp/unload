@@ -56,9 +56,9 @@ trait QueueConstruct
                                 'SQS_WORKER_QUEUE' => $queueRef,
                             ],
                         ],
-                        'Layers' => [
+                        'Layers' => array_merge([
                             $this->layer->php(),
-                        ],
+                        ], $this->layer->extensions()),
                     ]),
                 ],
                 $queueStack => [
