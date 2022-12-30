@@ -41,7 +41,11 @@
         },
         "runtime": {
             "type": "string",
-            "enum": ["provided", "provided.arm"]
+            "enum": ["provided"]
+        },
+        "architecture": {
+            "type": "string",
+            "enum": ["x86_64", "arm64"]
         },
         "memory": {
             "type": "integer",

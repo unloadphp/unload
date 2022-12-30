@@ -111,6 +111,11 @@ class UnloadConfig
         return 'docker';
     }
 
+    public function architecture(): string
+    {
+        return Arr::get($this->config, 'architecture', 'x86_64');
+    }
+
     public function memory(): int
     {
         return (int) Arr::get($this->config, 'memory', 1024);

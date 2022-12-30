@@ -92,8 +92,9 @@ class SamTemplate extends Template
                         'FunctionName' => $this->unloadConfig->webFunction(),
                         'MemorySize' => $this->unloadConfig->webFunctionMemory(),
                         'Timeout' => $this->unloadConfig->webFunctionTimeout(),
+                        'Architectures' => [$this->unloadConfig->architecture()],
                         'PackageType' => 'Zip',
-                        'Handler' => 'public/index.php',
+                        'Handler' => 'web.php',
                         'FunctionUrlConfig' => [
                             'AuthType' => 'NONE'
                         ],
@@ -121,8 +122,9 @@ class SamTemplate extends Template
                         'FunctionName' => $this->unloadConfig->cliFunction(),
                         'MemorySize' => $this->unloadConfig->cliFunctionMemory(),
                         'Timeout' => $this->unloadConfig->cliFunctionTimeout(),
+                        'Architectures' => [$this->unloadConfig->architecture()],
                         'PackageType' => 'Zip',
-                        'Handler' => 'artisan',
+                        'Handler' => 'cli.php',
                         'ReservedConcurrentExecutions' => $this->unloadConfig->cliFunctionConcurrency(),
                         'ProvisionedConcurrencyConfig' => array_filter([
                             'ProvisionedConcurrentExecutions' => $this->unloadConfig->cliFunctionProvision(),
@@ -141,6 +143,7 @@ class SamTemplate extends Template
                     'Properties' => array_filter([
                         'FunctionName' => $this->unloadConfig->deployFunction(),
                         'PackageType' => 'Zip',
+                        'Architectures' => ['arm64'],
                         'Policies' => [
                             [
                                 'Version' => "2012-10-17",

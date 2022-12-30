@@ -37,6 +37,7 @@ trait QueueConstruct
                         'FunctionName' => $this->unloadConfig->workerFunction($queueName),
                         'MemorySize' => Arr::get($queueDefinition, 'memory', $this->unloadConfig->memory()),
                         'Timeout' => Arr::get($queueDefinition, 'timeout', $this->unloadConfig->timeout()),
+                        'Architectures' => [$this->unloadConfig->architecture()],
                         'PackageType' => 'Zip',
                         'Handler' => 'worker.php',
                         'EphemeralStorage' => [

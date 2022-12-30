@@ -30,9 +30,7 @@ class SetupPhpIniFileTask
 opcache.validate_timestamps=0
 opcache.enable_cli=1
 expose_php=off
-opcache.file_cache="/tmp"
 opcache.enable_file_override=1
-opcache.file_cache_consistency_checks=0
 
 $extensions
 

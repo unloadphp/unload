@@ -101,12 +101,12 @@ class Path
 
     public static function layersFile(): string
     {
-        return self::tmpApp('/vendor/bref/bref/layers.json');
+        return self::tmpApp('/vendor/unload/unload-laravel/layer/php.json');
     }
 
     public static function extensionFile(): string
     {
-        return 'https://raw.githubusercontent.com/brefphp/extra-php-extensions/master/layers.json';
+        return self::tmpApp('/vendor/unload/unload-laravel/layer/extension.json');
     }
 
     public static function unloadTemplatePath(?string $config, bool $relative = false): string

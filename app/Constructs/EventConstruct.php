@@ -42,7 +42,7 @@ trait EventConstruct
                     ]
                 ]);
             }
-        } else{
+        } elseif ($warmer > 0) {
             $this->append('Resources.DeployFunction.Properties.Events.Warmer', [
                 'Type' => 'Schedule',
                 'Properties' => [

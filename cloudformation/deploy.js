@@ -22,25 +22,27 @@ async function warmHook(concurrency = null) {
     let funcName = process.env.WEB_FUNCTION;
     let funcConcurrency = concurrency || process.env.WEB_CONCURRENCY;
 
-    console.log('Warming function: ' + funcName);
-    console.log('Warming concurrency: ' + funcConcurrency);
+    if (funcConcurrency > 0) {
+        console.log('Warming function: ' + funcName);
+        console.log('Warming concurrency: ' + funcConcurrency);
 
-    for (let i=0; i <= funcConcurrency; i++) {
-        let params = {
-            FunctionName: funcName,
-            InvocationType: 'Event',
-            LogType: 'None',
-            Payload: Buffer.from(JSON.stringify({
-                warmer: true
-            }))
-        };
+        for (let i=0; i <= funcConcurrency; i++) {
+            let params = {
+                FunctionName: funcName,
+                InvocationType: 'Event',
+                LogType: 'None',
+                Payload: Buffer.from(JSON.stringify({
+                    warmer: true
+                }))
+            };
 
-        invocations.push(lambda.invoke(params).promise());
+            invocations.push(lambda.invoke(params).promise());
 
+        }
+
+        let result = await Promise.all(invocations).then(() => true);
+        console.log('Warming finished: ' + result);
     }
-
-    let result = await Promise.all(invocations).then(() => true);
-    console.log('Warming finished: ' + result);
 }
 
 async function deployHook(deploymentId, lifecycleEventHookExecutionId) {

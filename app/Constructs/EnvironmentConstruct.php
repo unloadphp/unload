@@ -44,7 +44,6 @@ trait EnvironmentConstruct
             'ASSET_URL' => new TaggedValue('Ref', 'EnvAssetUrl'),
             'APP_CONFIG_CACHE' => '/tmp/config.php',
             'BREF_PING_DISABLE' => 1,
-            'BREF_AUTOLOAD_PATH' => '/var/task/autoload.php',
             'LOG_CHANNEL' => 'stderr',
             'VIEW_COMPILED_PATH' => '/tmp/storage/framework/views',
         ];
