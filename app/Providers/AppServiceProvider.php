@@ -54,7 +54,7 @@ class AppServiceProvider extends ServiceProvider
                     throw new \Exception('AWS SAM binary is required, but is not found on the system. See https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html');
                 }
 
-                $artisan->setVersion(app()->version() . "\n  $version");
+                $artisan->setVersion(app()->version() . "\n $version");
             }
         );
     }
