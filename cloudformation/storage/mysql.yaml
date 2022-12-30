@@ -67,7 +67,7 @@ Parameters:
   DBMultiAZ:
     Description: 'Specifies if the database instance is deployed to multiple Availability Zones for HA.'
     Type: String
-    Default: true
+    Default: false
     AllowedValues: [true, false]
   DBOptionGroupName:
     Description: 'Optional name of an existing DB option group.'
