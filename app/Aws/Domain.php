@@ -39,9 +39,10 @@ class Domain
             }
 
             $zoneId = str_replace('/hostedzone/', '', $registeredZone[0]['Id']);
-            $zones[$onlyRoot ? $zone : $domain] = $zoneId;
             if ($wildcard && $zone != $domain) {
                 $wildcards["*.$zone"] = $zoneId;
+            } else {
+                $zones[$onlyRoot ? $zone : $domain] = $zoneId;
             }
         }
 

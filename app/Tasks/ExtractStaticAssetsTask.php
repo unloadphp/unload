@@ -11,9 +11,14 @@ class ExtractStaticAssetsTask
 {
     public function handle(UnloadConfig $unload): void
     {
-        // exteract static assets from build
         File::makeDirectory(Path::tmpAssetDirectory(), force: true);
 
+        $this->extractAssetsFromPublicFolder();
+        $this->injectErrorPages();
+    }
+
+    protected function extractAssetsFromPublicFolder(): void
+    {
         $assets = (new Finder())
             ->in(Path::tmpApp('public'))
             ->notName('*.php')
@@ -31,6 +36,13 @@ class ExtractStaticAssetsTask
             } else {
                 File::copy($asset->getRealPath(), Path::tmpAsset($asset->getRelativePathname()));
             }
+        }
+    }
+
+    protected function injectErrorPages(): void
+    {
+        if(! File::exists(Path::tmpAsset('503.html'))) {
+            File::copy(resource_path('503.html'), Path::tmpAsset('503.html'));
         }
     }
 }

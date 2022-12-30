@@ -17,17 +17,19 @@ Description: 'ACM: certificate for multiple domains'
 Resources:
   Certificate:
     Type: 'AWS::CertificateManager::Certificate'
-    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      DomainName: <?= $domains->keys()->first() ?>
+      DomainName: '<?= $domains->keys()->first() ?>'
 
       DomainValidationOptions:
         <?php foreach($domains as $domain => $zone): ?>
+        <?php if(str_starts_with($domain, '*.')): ?>
 
         - DomainName: '<?= trim($domain) ?>'
 
           HostedZoneId: <?= trim($zone) ?>
 
+        <?php endif; ?>
         <?php endforeach; ?>
 
       SubjectAlternativeNames:

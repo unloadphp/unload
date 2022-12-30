@@ -61,20 +61,18 @@ Parameters:
     Type: String
     Default: none
     AllowedValues: [ none, whitelist, blacklist ]
-  DefaultErrorPagePath:
-    Description: 'Optional path of the error page for the website (e.g. /error.html).'
+  403ErrorPagePath:
+    Description: 'Optional path of the error page for 403 errors.'
     Type: String
-    Default: ''
-  DefaultErrorResponseCode:
-    Description: 'The HTTP status code that you want to return along with the error page (requires DefaultErrorPagePath).'
+    Default: '/403.html'
+  503ErrorPagePath:
+    Description: 'Optional path of the error page for 503 errors.'
     Type: String
-    Default: '404'
-    AllowedValues: [ '200', '404' ]
+    Default: '/503.html'
 Conditions:
   HasS3Bucket: !Not [ !Equals [ !Ref ParentS3StackAccessLog, '' ] ]
   HasCertificate: !Not [ !Equals [ !Ref ExistingCertificate, '' ] ]
   HasWAF: !Not [ !Equals [ !Ref ParentWAFStack, '' ] ]
-  HasDefaultErrorPagePath: !Not [ !Equals [ !Ref DefaultErrorPagePath, '' ] ]
   HasAlertTopic: !Not [ !Equals [ !Ref ParentAlertStack, '' ] ]
   HasRegionNorthVirginia: !Equals [ !Ref 'AWS::Region', 'us-east-1' ]
   HasAlertTopicAndRegionNorthVirginia: !And [ !Condition HasAlertTopic, !Condition HasRegionNorthVirginia ]
@@ -146,12 +144,10 @@ Resources:
           - !Split [',', !Ref Domains]
           - []
         Comment: !Ref DistributionName
-        CustomErrorResponses: !If
-          - HasDefaultErrorPagePath
-          - - ErrorCode: 403 # 403 from S3 indicates that the file does not exists
-              ResponseCode: !Ref DefaultErrorResponseCode
-              ResponsePagePath: !Ref DefaultErrorPagePath
-          - [ ]
+        CustomErrorResponses:
+          - ErrorCode: 503
+            ResponseCode: 503
+            ResponsePagePath: !Ref 503ErrorPagePath
         DefaultCacheBehavior:
           AllowedMethods:
             - GET
@@ -161,6 +157,10 @@ Resources:
             - PATCH
             - POST
             - DELETE
+          CachedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
           DefaultTTL: 0
           ForwardedValues:
             Cookies:
@@ -175,6 +175,7 @@ Resources:
               - "User-Agent"
               - "X-Requested-With"
               - "X-Forwarded-Host"
+          Compress: true
           TargetOriginId: endpointorigin
           ViewerProtocolPolicy: 'redirect-to-https'
           FunctionAssociations:
@@ -198,6 +199,24 @@ Resources:
             MinTTL: 60 # in seconds
             TargetOriginId: s3origin
             PathPattern: /assets/*
+            ViewerProtocolPolicy: 'redirect-to-https'
+          - AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            CachedMethods:
+              - GET
+              - HEAD
+            Compress: true
+            DefaultTTL: 3600 # in seconds
+            ForwardedValues:
+              Cookies:
+                Forward: none
+              QueryString: false
+            MaxTTL: 86400 # in seconds
+            MinTTL: 60 # in seconds
+            TargetOriginId: s3origin
+            PathPattern: /*.html
             ViewerProtocolPolicy: 'redirect-to-https'
           - AllowedMethods:
               - GET
@@ -248,6 +267,7 @@ Resources:
             OriginPath: !Ref EndpointOriginPath
             Id: endpointorigin
             CustomOriginConfig:
+              OriginKeepaliveTimeout: 60
               OriginProtocolPolicy: 'https-only'
         PriceClass: 'PriceClass_All'
         ViewerCertificate: !If

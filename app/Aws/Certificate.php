@@ -4,10 +4,8 @@ namespace App\Aws;
 
 use App\Cloudformation;
 use App\Configs\UnloadConfig;
-use App\Path;
 use Aws\CloudFormation\CloudFormationClient;
 use Aws\CloudFormation\Exception\CloudFormationException;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
 class Certificate
@@ -37,7 +35,7 @@ class Certificate
             $this->cloudformation->updateStack([
                 'StackName' => $stackName,
                 'EnableTerminationProtection' => true,
-                'TemplateBody' => Cloudformation::get("construct/certificate", compact('domains')),
+                'TemplateBody' => Cloudformation::get("construct/certificate.yaml", compact('domains')),
                 'Capabilities' => ['CAPABILITY_IAM'],
                 'Tags' => $this->unload->unloadTags(),
             ]);
@@ -50,7 +48,7 @@ class Certificate
             $this->cloudformation->createStack([
                 'StackName' => $stackName,
                 'EnableTerminationProtection' => true,
-                'TemplateBody' => Cloudformation::get("construct/certificate", compact('domains')),
+                'TemplateBody' => Cloudformation::get("construct/certificate.yaml", compact('domains')),
                 'Capabilities' => ['CAPABILITY_IAM'],
                 'Tags' => $this->unload->unloadTags(),
             ]);
