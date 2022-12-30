@@ -19,6 +19,12 @@ class SystemManager
         $this->unload = $unload;
     }
 
+    public function initialized(): bool
+    {
+        $environmentParts = $this->ssm->describeParameters(['Path' => $this->unload->ssmEnvPath(),]);
+        return !!$environmentParts->search('Parameters');
+    }
+
     public function flushEnvironment(): void
     {
         $environmentParts = $this->ssm->getParametersByPath(['Path' => $this->unload->ssmPath(),]);

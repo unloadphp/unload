@@ -17,6 +17,11 @@ class InitEnvironmentTask
 
     public function handle(): void
     {
+        $parameterStore = new SystemManager($this->config);
+        if ($parameterStore->initialized()) {
+            return;
+        }
+
         $appKey = 'base64:'.base64_encode(random_bytes(32));
         $password = Str::random(41);
         $initEnvironment = <<<ENV
@@ -38,7 +43,6 @@ DB_PASSWORD={$password}
 
 ENV;
 
-        $parameterStore = new SystemManager($this->config);
         $parameterStore->putEnvironment($initEnvironment, rotate: true);
         $parameterStore->putCiParameter('database', $password, secure: true);
     }
