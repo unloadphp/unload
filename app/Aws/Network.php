@@ -27,6 +27,8 @@ class Network
     public function createStack($vpc, $nat, $requiresSshAccess): PendingStack
     {
         $artifactsBucketName = $this->ci->getArtifactsBucketName();
+        $requiresBastionHost = $requiresSshAccess && $nat == 'gateway';
+        $bastionSshSecurityGroupId = '';
 
         $vpcTemplatePath = "cloudformation/network/vpc-$vpc.yaml";
         $vpcTemplateUrl = $this->s3->putObject([
@@ -92,10 +94,14 @@ class Network
                     ]
                 ],
             ];
+
+            if ($requiresSshAccess) {
+                $bastionSshSecurityGroupId = new TaggedValue('GetAtt', "Nat{$subnetZone}SubnetZoneStack.Outputs.SecurityGroupId");
+            }
         }
 
-        if ($requiresSshAccess) {
-            $resources["BastionSSHInstance"] = [
+        if ($requiresBastionHost) {
+            $resources["BastionSSHInstanceStack"] = [
                 'Type' => 'AWS::CloudFormation::Stack',
                 'Properties' => [
                     'Tags' => $this->unload->unloadGlobalTags(),
@@ -107,6 +113,7 @@ class Network
                     ]
                 ],
             ];
+            $bastionSshSecurityGroupId = new TaggedValue('GetAtt', "BastionSSHInstanceStack.Outputs.SecurityGroupId");
         }
 
         $template =  Yaml::dump([
@@ -154,6 +161,13 @@ class Network
                     'Value' => new TaggedValue('GetAtt', 'VpcStack.Outputs.SubnetsPublic'),
                     'Export' => [
                         'Name' => new TaggedValue('Sub', '${AWS::StackName}-SubnetsPublic'),
+                    ]
+                ],
+                'VpcBastionSecurityGroupId' => [
+                    'Description' => 'Bastion Security Group Id',
+                    'Value' => $bastionSshSecurityGroupId,
+                    'Export' => [
+                        'Name' => new TaggedValue('Sub', '${AWS::StackName}-BastionSecurityGroupId'),
                     ]
                 ],
                 'VpcAZsNumber' => [

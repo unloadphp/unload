@@ -25,11 +25,10 @@ Parameters:
   VpcSecurityGroup:
     Description: 'Vpc Security Group'
     Type: String
-  DBPubliclyAccessible:
-    Description: 'Optional make RDS instance publicly accessible'
+  VpcBastionSecurityGroup:
+    Description: 'Vpc Bastion Security Group'
     Type: String
-    Default: false
-    AllowedValues: [ true, false ]
+    Default: ''
   DBSnapshotIdentifier:
     Description: 'Optional name or Amazon Resource Name (ARN) of the DB snapshot from which you want to restore (leave blank to create an empty database).'
     Type: String
@@ -91,7 +90,7 @@ Parameters:
     Default: '8.0.23'
     AllowedValues: ['8.0.23', '8.0.15', '5.7.25', '5.7.21', '5.6.41', '5.5.61']
 Conditions:
-  HasPublicAccess: !Equals [!Ref DBPubliclyAccessible, true]
+  HasBastionSecurityGroup: !Not [!Equals [!Ref VpcBastionSecurityGroup, '']]
   HasDBOptionGroupName: !Not [!Equals [!Ref DBOptionGroupName, '']]
   HasDBParameterGroupName: !Not [!Equals [!Ref DBParameterGroupName, '']]
 Resources:
@@ -100,16 +99,20 @@ Resources:
     Properties:
       GroupDescription: !Ref 'AWS::StackName'
       VpcId: !Ref VpcId
-      SecurityGroupIngress: !If
-        - HasPublicAccess
-        - - IpProtocol: tcp
-            FromPort: 3306
-            ToPort: 3306
-            CidrIp: '0.0.0.0/0'
-        - - IpProtocol: tcp
-            FromPort: 3306
-            ToPort: 3306
-            SourceSecurityGroupId: !Ref VpcSecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref VpcSecurityGroup
+  SecurityGroupBastionAccess:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: HasBastionSecurityGroup
+    Properties:
+      GroupId: !Ref DatabaseSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref VpcBastionSecurityGroup
   DBSubnetGroup:
     Type: 'AWS::RDS::DBSubnetGroup'
     Properties:
@@ -139,7 +142,6 @@ Resources:
       PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow
       StorageType: gp2
       StorageEncrypted: true
-      PubliclyAccessible: !Ref DBPubliclyAccessible
       VPCSecurityGroups:
         - !Ref DatabaseSecurityGroup
 Outputs:

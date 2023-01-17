@@ -21,7 +21,6 @@ trait DatabaseConstruct
         ]);
 
         if ($database['engine'] == 'mysql') {
-            $requiresPublicDatabase = ($database['publiclyAccessible'] ?? 'no') == 'yes';
             $this->append('Resources', [
                 'DatabaseStack' => [
                     'Type' => 'AWS::Serverless::Application',
@@ -30,12 +29,10 @@ trait DatabaseConstruct
                         'Location' => Cloudformation::compile("storage/mysql.yaml"),
                         'Parameters' => array_filter([
                             'VpcId' => new TaggedValue('Ref', 'VpcId'),
-                            'VpcSubnetsPrivate' => $requiresPublicDatabase
-                                ? new TaggedValue('Ref', 'VpcSubnetsPublic')
-                                : new TaggedValue('Ref', 'VpcSubnetsPrivate'),
+                            'VpcSubnetsPrivate' => new TaggedValue('Ref', 'VpcSubnetsPrivate'),
                             'VpcSecurityGroup' => new TaggedValue('GetAtt', 'SecurityGroupStack.Outputs.ClientSecurityGroup'),
+                            'VpcBastionSecurityGroup' => new TaggedValue('Ref', 'VpcBastionSecurityGroupId'),
 
-                            'DBPubliclyAccessible' => $requiresPublicDatabase,
                             'DBInstanceClass' => Arr::get($database, 'size'),
                             'DBAllocatedStorage' => Arr::get($database, 'disk'),
                             'DBBackupRetentionPeriod' => Arr::get($database, 'backup-retention'),
@@ -62,6 +59,7 @@ trait DatabaseConstruct
                             'VpcId' => new TaggedValue('Ref', 'VpcId'),
                             'VpcSubnetsPrivate' => new TaggedValue('Ref', 'VpcSubnetsPrivate'),
                             'VpcSecurityGroup' => new TaggedValue('GetAtt', 'SecurityGroupStack.Outputs.ClientSecurityGroup'),
+                            'VpcBastionSecurityGroup' => new TaggedValue('Ref', 'VpcBastionSecurityGroupId'),
 
                             'MinCapacity' => Arr::get($database, 'min-capacity'),
                             'MaxCapacity' => Arr::get($database, 'max-capacity'),

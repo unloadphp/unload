@@ -151,7 +151,7 @@ Resources:
           CidrIp: !Ref VpcCidrBlock
       VpcId: !Ref VpcId
   NATSecurityGroupAccessMysql:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: 'AWS::EC2::SecurityGroupEgress'
     Condition: HasIAMUserSSHAccess
     Properties:
       GroupId: !Ref NATSecurityGroup
@@ -478,3 +478,8 @@ Outputs:
     Value: !Ref EIP
     Export:
       Name: !Sub '${AWS::StackName}-IPAddress'
+  SecurityGroupId:
+    Description: 'The security group used to manage access to nat instance.'
+    Value: !Ref NATSecurityGroup
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroupId'

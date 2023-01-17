@@ -31,6 +31,8 @@ trait CacheConstruct
                         'VpcId' => new TaggedValue('Ref', 'VpcId'),
                         'VpcSubnetsPrivate' => new TaggedValue('Ref', 'VpcSubnetsPrivate'),
                         'VpcSecurityGroup' => new TaggedValue('GetAtt', 'SecurityGroupStack.Outputs.ClientSecurityGroup'),
+                        'VpcBastionSecurityGroup' => new TaggedValue('Ref', 'VpcBastionSecurityGroupId'),
+
                         'CacheNodeType' => Arr::get($cache, 'size'),
                         'EngineVersion' => Arr::get($cache, 'version'),
                         'NumShards' =>  Arr::get($cache, 'shards'),

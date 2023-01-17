@@ -25,6 +25,10 @@ Parameters:
   VpcSecurityGroup:
     Description: 'Vpc Security Group'
     Type: String
+  VpcBastionSecurityGroup:
+    Description: 'Vpc Bastion Security Group'
+    Type: String
+    Default: ''
   DBSnapshotIdentifier:
     Description: 'Optional identifier for the DB cluster snapshot from which you want to restore (leave blank to create an empty cluster).'
     Type: String
@@ -91,6 +95,7 @@ Mappings:
       EngineVersion: '5.7.mysql_aurora.2.07.1'
       Engine: 'aurora-mysql'
 Conditions:
+  HasBastionSecurityGroup: !Not [ !Equals [ !Ref VpcBastionSecurityGroup, '' ] ]
   HasNotDBSnapshotIdentifier: !Equals [!Ref DBSnapshotIdentifier, '']
   HasDBSnapshotIdentifier: !Not [!Condition HasNotDBSnapshotIdentifier]
 Resources:
@@ -104,6 +109,15 @@ Resources:
           ToPort: 3306
           SourceSecurityGroupId: !Ref VpcSecurityGroup
       VpcId: !Ref VpcId
+  SecurityGroupBastionAccess:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: HasBastionSecurityGroup
+    Properties:
+      GroupId: !Ref ClusterSecurityGroup
+      IpProtocol: tcp
+      FromPort: 3306
+      ToPort: 3306
+      SourceSecurityGroupId: !Ref VpcBastionSecurityGroup
   DBSubnetGroup:
     Type: 'AWS::RDS::DBSubnetGroup'
     Properties:
