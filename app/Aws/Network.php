@@ -51,12 +51,29 @@ class Network
             'Body'   => fopen(base_path($bastionTemplatePath), 'r'),
         ])->get('ObjectURL');
 
+        $securityGroupTemplatePath = "cloudformation/network/vpc-sg.yaml";
+        $securityGroupTemplateUrl = $this->s3->putObject([
+            'Bucket' => $artifactsBucketName,
+            'Key'    => $securityGroupTemplatePath,
+            'Body'   => fopen(base_path($securityGroupTemplatePath), 'r'),
+        ])->get('ObjectURL');
+
         $resources = [
             'VpcStack' => [
                 'Type' => 'AWS::CloudFormation::Stack',
                 'Properties' => [
                     'Tags' => $this->unload->unloadGlobalTags(),
                     'TemplateURL' => $vpcTemplateUrl,
+                ],
+            ],
+            'BastionSecurityGroupStack' => [
+                'Type' => 'AWS::CloudFormation::Stack',
+                'Properties' => [
+                    'Tags' => $this->unload->unloadGlobalTags(),
+                    'TemplateURL' => $securityGroupTemplateUrl,
+                    'Parameters' => [
+                        'VpcId' => new TaggedValue('GetAtt', 'VpcStack.Outputs.VPC'),
+                    ],
                 ],
             ]
         ];
@@ -91,13 +108,10 @@ class Network
                         'VpcRouteTablePrivate' => new TaggedValue('GetAtt', "VpcStack.Outputs.RouteTable{$subnetZone}Private"),
                         'VpcSubnetPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.Subnet{$subnetZone}Public"),
                         'IAMUserSSHAccess' => $requiresSshAccess ? 'true' : 'false',
+                        'BastionSecurityGroupId' => new TaggedValue('GetAtt', 'BastionSecurityGroupStack.Outputs.ClientSecurityGroup'),
                     ]
                 ],
             ];
-
-            if ($requiresSshAccess) {
-                $bastionSshSecurityGroupId = new TaggedValue('GetAtt', "Nat{$subnetZone}SubnetZoneStack.Outputs.SecurityGroupId");
-            }
         }
 
         if ($requiresBastionHost) {
@@ -110,10 +124,10 @@ class Network
                         'VpcId' => new TaggedValue('GetAtt', 'VpcStack.Outputs.VPC'),
                         'VpcCidrBlock' => new TaggedValue('GetAtt', 'VpcStack.Outputs.CidrBlock'),
                         'VpcSubnetsPublic' => new TaggedValue('GetAtt', "VpcStack.Outputs.SubnetsPublic"),
+                        'BastionSecurityGroupId' => new TaggedValue('GetAtt', 'BastionSecurityGroupStack.Outputs.ClientSecurityGroup'),
                     ]
                 ],
             ];
-            $bastionSshSecurityGroupId = new TaggedValue('GetAtt', "BastionSSHInstanceStack.Outputs.SecurityGroupId");
         }
 
         $template =  Yaml::dump([
@@ -165,7 +179,7 @@ class Network
                 ],
                 'VpcBastionSecurityGroupId' => [
                     'Description' => 'Bastion Security Group Id',
-                    'Value' => $bastionSshSecurityGroupId,
+                    'Value' => new TaggedValue('GetAtt', 'BastionSecurityGroupStack.Outputs.ClientSecurityGroup'),
                     'Export' => [
                         'Name' => new TaggedValue('Sub', '${AWS::StackName}-BastionSecurityGroupId'),
                     ]

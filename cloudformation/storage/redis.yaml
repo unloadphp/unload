@@ -127,8 +127,8 @@ Resources:
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
+      FromPort: 6379
+      ToPort: 6379
       SourceSecurityGroupId: !Ref VpcBastionSecurityGroup
   ReplicationGroup:
     DeletionPolicy: Snapshot

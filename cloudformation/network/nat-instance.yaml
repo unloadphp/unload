@@ -39,6 +39,10 @@ Parameters:
     Description: 'Instance type of the NAT instance. Keep in mind that different instances come with different network capabilities.'
     Type: String
     Default: 't3.nano'
+  BastionSecurityGroupId:
+    Description: 'Security group id used for bastion ssh tunnel traffic control'
+    Type: String
+    Default: ''
   LogsRetentionInDays:
     Description: 'Specifies the number of days you want to retain log events.'
     Type: Number
@@ -150,29 +154,11 @@ Resources:
           ToPort: 443
           CidrIp: !Ref VpcCidrBlock
       VpcId: !Ref VpcId
-  NATSecurityGroupAccessMysql:
-    Type: 'AWS::EC2::SecurityGroupEgress'
-    Condition: HasIAMUserSSHAccess
-    Properties:
-      GroupId: !Ref NATSecurityGroup
-      IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
-      CidrIp: !Ref VpcCidrBlock
-  NATSecurityGroupAccessRedis:
+  BastionSecurityGroupInSSHWorld:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Condition: HasIAMUserSSHAccess
     Properties:
-      GroupId: !Ref NATSecurityGroup
-      IpProtocol: tcp
-      FromPort: 6379
-      ToPort: 6379
-      CidrIp: !Ref VpcCidrBlock
-  NATSecurityGroupInSSHWorld:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Condition: HasIAMUserSSHAccess
-    Properties:
-      GroupId: !Ref NATSecurityGroup
+      GroupId: !Ref BastionSecurityGroupId
       IpProtocol: tcp
       FromPort: 22
       ToPort: 22
@@ -426,6 +412,7 @@ Resources:
             DeviceIndex: 0
             Groups:
               - !Ref NATSecurityGroup
+              - !Ref BastionSecurityGroupId
         UserData:
           'Fn::Base64': !Sub
             - |

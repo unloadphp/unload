@@ -36,6 +36,10 @@ Parameters:
     Description: 'Instance type of the SSH bastion host/instance.'
     Type: String
     Default: 't3.nano'
+  BastionSecurityGroupId:
+    Description: 'Security group id used for bastion ssh tunnel traffic control'
+    Type: String
+    Default: ''
   LogsRetentionInDays:
     Description: 'Specifies the number of days you want to retain log events.'
     Type: Number
@@ -106,16 +110,15 @@ Resources:
     Type: 'AWS::Logs::LogGroup'
     Properties:
       RetentionInDays: !Ref LogsRetentionInDays
-  SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+  BastionSecurityGroupInSSHWorld:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Condition: HasIAMUserSSHAccess
     Properties:
-      GroupDescription: !Ref 'AWS::StackName'
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
-          CidrIp: '0.0.0.0/0'
-      VpcId: !Ref VpcId
+      GroupId: !Ref BastionSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: '0.0.0.0/0'
   InstanceProfile:
     Type: 'AWS::IAM::InstanceProfile'
     Properties:
@@ -406,7 +409,7 @@ Resources:
           - AssociatePublicIpAddress: true
             DeviceIndex: 0
             Groups:
-              - !Ref SecurityGroup
+              - !Ref BastionSecurityGroupId
         UserData:
           'Fn::Base64': !Sub |
             #!/bin/bash -ex
@@ -446,13 +449,13 @@ Resources:
           - ScheduledActions
         WaitOnResourceSignals: true
 Outputs:
-  SecurityGroup:
-    Description: 'Use this Security Group to reference incoming traffic from the SSH bastion host/instance.'
-    Value: !Ref SecurityGroup
-    Export:
-      Name: !Sub '${AWS::StackName}-SecurityGroup'
   IPAddress:
     Description: 'The public IP address of the SSH bastion host/instance.'
     Value: !Ref EIP
     Export:
       Name: !Sub '${AWS::StackName}-IPAddress'
+  SecurityGroupId:
+    Description: 'Use this Security Group to reference incoming traffic from the SSH bastion host/instance.'
+    Value: !Ref BastionSecurityGroupId
+    Export:
+      Name: !Sub '${AWS::StackName}-SecurityGroup'
