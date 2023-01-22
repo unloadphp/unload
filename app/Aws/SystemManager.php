@@ -21,7 +21,7 @@ class SystemManager
 
     public function initialized(): bool
     {
-        $environmentParts = $this->ssm->describeParameters(['Path' => $this->unload->ssmEnvPath(),]);
+        $environmentParts = $this->ssm->getParametersByPath(['Path' => $this->unload->ssmEnvPath(),]);
         return !!$environmentParts->search('Parameters');
     }
 

@@ -6,7 +6,8 @@
         "config",
         "cloudformation",
         "vendor",
-        "resources"
+        "resources",
+        "layers"
     ],
     "files": [
         "composer.json"

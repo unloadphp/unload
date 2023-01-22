@@ -3,6 +3,7 @@
 namespace App\Aws;
 
 use Aws\CloudFormation\CloudFormationClient;
+use Aws\CloudFormation\Exception\CloudFormationException;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
@@ -24,25 +25,34 @@ class PendingStack
         $stackEventsTable->setStyle('compact');
         $stackEventsTable->render();
 
+        $stackDescribeAttempts = 0;
         $stackInProgress = true;
         $stackEvents = [];
 
         while($stackInProgress) {
-            foreach ($this->cloudformation->describeStackEvents(['StackName' => $this->stackName])->get('StackEvents') as $event) {
-                if (in_array($event['EventId'], $stackEvents)) {
-                    continue;
+            try {
+                foreach ($this->cloudformation->describeStackEvents(['StackName' => $this->stackName])->get('StackEvents') as $event) {
+                    if (in_array($event['EventId'], $stackEvents)) {
+                        continue;
+                    }
+                    $stackEvents[] = $event['EventId'];
+                    $stackEventsTable->appendRow(
+                        collect($event)->only(['ResourceStatus', 'ResourceType', 'LogicalResourceId'])->values()->prepend("\t")->toArray()
+                    );
                 }
-                $stackEvents[] = $event['EventId'];
-                $stackEventsTable->appendRow(
-                    collect($event)->only(['ResourceStatus', 'ResourceType', 'LogicalResourceId'])->values()->prepend("\t")->toArray()
-                );
-            }
 
-            $stackStatus = $this->cloudformation->describeStacks(['StackName' => $this->stackName])->search('Stacks[0].StackStatus');
-            if (in_array($stackStatus, ['CREATE_COMPLETE', 'UPDATE_COMPLETE', 'DELETE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE', 'ROLLBACK_COMPLETE'])) {
-                $stackInProgress = false;
+                $stackStatus = $this->cloudformation->describeStacks(['StackName' => $this->stackName])->search('Stacks[0].StackStatus');
+                if (in_array($stackStatus, ['CREATE_COMPLETE', 'UPDATE_COMPLETE', 'DELETE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE', 'ROLLBACK_COMPLETE'])) {
+                    $stackInProgress = false;
+                }
+                $stackDescribeAttempts = 0;
+            } catch (CloudFormationException $e) {
+                if ($stackDescribeAttempts > 3) {
+                    throw $e;
+                }
+                $stackDescribeAttempts++;
+                sleep($stackDescribeAttempts*5);
             }
-
             sleep(0.5);
         }
     }

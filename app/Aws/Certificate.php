@@ -13,12 +13,14 @@ class Certificate
     private CloudFormationClient $cloudformation;
     private UnloadConfig $unload;
     private Domain $domain;
+    private ContinuousIntegration $continuousIntegration;
 
-    public function __construct(UnloadConfig $unload, Domain $domain)
+    public function __construct(UnloadConfig $unload, Domain $domain, ContinuousIntegration $continuousIntegration)
     {
         $this->cloudformation = new CloudFormationClient(['region' => 'us-east-1', 'profile' => $unload->profile(), 'version' => 'latest',]);
         $this->domain = $domain;
         $this->unload = $unload;
+        $this->continuousIntegration = $continuousIntegration;
     }
 
     public function createStack(): ?PendingStack
@@ -34,6 +36,7 @@ class Certificate
             $this->cloudformation->describeStacks(['StackName' => $stackName])->get('Stacks');
             $this->cloudformation->updateStack([
                 'StackName' => $stackName,
+                'RoleARN' => $this->continuousIntegration->getCloudformationRole(),
                 'EnableTerminationProtection' => true,
                 'TemplateBody' => Cloudformation::get("construct/certificate.yaml", compact('domains')),
                 'Capabilities' => ['CAPABILITY_IAM'],
@@ -47,6 +50,7 @@ class Certificate
 
             $this->cloudformation->createStack([
                 'StackName' => $stackName,
+                'RoleARN' => $this->continuousIntegration->getCloudformationRole(),
                 'EnableTerminationProtection' => true,
                 'TemplateBody' => Cloudformation::get("construct/certificate.yaml", compact('domains')),
                 'Capabilities' => ['CAPABILITY_IAM'],

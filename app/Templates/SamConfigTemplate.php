@@ -3,6 +3,8 @@
 namespace App\Templates;
 
 use App\Aws\Certificate;
+use App\Aws\ContinuousIntegration;
+use App\Configs\UnloadConfig;
 use App\Path;
 use Aws\CloudFormation\CloudFormationClient;
 use Illuminate\Support\Facades\App;
@@ -10,9 +12,18 @@ use Illuminate\Support\Facades\File;
 
 class SamConfigTemplate extends Template
 {
+    private ContinuousIntegration $continuousIntegration;
+
+    public function __construct(UnloadConfig $unloadConfig, ContinuousIntegration $continuousIntegration)
+    {
+        parent::__construct($unloadConfig);
+        $this->continuousIntegration = $continuousIntegration;
+    }
+
     public function make(): bool
     {
-        list($assetBucket, $assumeRole) = $this->ciConfiguration();
+        $assetBucket = $this->continuousIntegration->getArtifactsBucketName();
+        $assumeRole = $this->continuousIntegration->getCloudformationRole();
         $vpcParameters = $this->vpcConfiguration();
         $certificate = $this->getCertificate();
         $assetHash = $this->calculateAssetHash();
@@ -54,16 +65,6 @@ SAM
                 $vpcParameters .= "{$value['OutputKey']}={$value['OutputValue']} ";
             });
         return $vpcParameters;
-    }
-
-    protected function ciConfiguration(): array
-    {
-        $cloudformation = new CloudFormationClient(['profile' => $this->unloadConfig->profile(), 'region' => $this->unloadConfig->region(), 'version' => 'latest']);
-        $outputs = collect($cloudformation->describeStacks(['StackName' => $this->unloadConfig->ciStackName()])->search('Stacks[0].Outputs'))->keyBy('OutputKey');
-        return [
-            str_replace('arn:aws:s3:::', '', $outputs->get('ArtifactsBucket')['OutputValue']),
-            $outputs->get('CloudFormationExecutionRole')['OutputValue']
-        ];
     }
 
     protected function calculateAssetHash(): string

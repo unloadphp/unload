@@ -7,6 +7,7 @@ use App\Oidcs\OidcInterface;
 use Aws\CloudFormation\CloudFormationClient;
 use Aws\CloudFormation\Exception\CloudFormationException;
 use Aws\Iam\IamClient;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class ContinuousIntegration
@@ -14,6 +15,7 @@ class ContinuousIntegration
     private CloudFormationClient $cloudformation;
     private IamClient $iam;
     private UnloadConfig $unload;
+    private static $memoize = null;
 
     public function __construct(UnloadConfig $unload)
     {
@@ -97,18 +99,18 @@ class ContinuousIntegration
 
     public function getPipelineExecutionRoleArn(): string
     {
-        $outputs = collect($this->cloudformation->describeStacks(['StackName' => $this->unload->ciStackName()])
-            ->search('Stacks[0].Outputs'))->keyBy('OutputKey');
-        return $outputs->get('PipelineExecutionRole')['OutputValue'];
+        return $this->stackOutput()->get('PipelineExecutionRole')['OutputValue'];
     }
 
     public function getArtifactsBucketName(): string
     {
-        $outputs = collect($this->cloudformation->describeStacks(['StackName' => $this->unload->ciStackName()])
-            ->search('Stacks[0].Outputs'))->keyBy('OutputKey');
-
-        $bucketArn = $outputs->get('ArtifactsBucket')['OutputValue'];
+        $bucketArn = $this->stackOutput()->get('ArtifactsBucket')['OutputValue'];
         return Str::of($bucketArn)->replace('arn:aws:s3:::', '')->toString();
+    }
+
+    public function getCloudformationRole(): string
+    {
+        return $this->stackOutput()->get('CloudFormationExecutionRole')['OutputValue'];
     }
 
     public function getOpenIDConnectProviderArn(OidcInterface $oidc): ?string
@@ -139,5 +141,14 @@ class ContinuousIntegration
         } catch (CloudFormationException $e) {
             return false;
         }
+    }
+
+    protected function stackOutput(): Collection
+    {
+        if(is_null(self::$memoize)) {
+            self::$memoize = collect($this->cloudformation->describeStacks(['StackName' => $this->unload->ciStackName()])
+                ->search('Stacks[0].Outputs'))->keyBy('OutputKey');
+        }
+        return self::$memoize;
     }
 }
