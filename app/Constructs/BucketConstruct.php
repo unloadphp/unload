@@ -19,7 +19,7 @@ trait BucketConstruct
             $bucketRef = ['BucketName' => new TaggedValue('GetAtt', "$bucketStack.Outputs.BucketName"),];
             $bucketAccess = [
                 'private' => 'Private',
-                'pulic-read' => 'PublicRead'
+                'public-read' => 'PublicRead'
             ][Arr::get($bucketDefinition, 'access')] ?? 'Private';
 
             $this->append('Policies', [
