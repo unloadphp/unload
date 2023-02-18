@@ -50,50 +50,60 @@ Parameters:
     AllowedValues: [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653 ]
 Mappings:
   RegionMap:
-    'af-south-1':
-      NATAMI: 'ami-007da8686850bd56f'
-    'eu-north-1':
-      NATAMI: 'ami-0a9b1be2951ef12c3'
+    'ap-south-2':
+      NATAMI: 'ami-0797efd94fb23dfb7'
     'ap-south-1':
-      NATAMI: 'ami-0e813f885a024399b'
-    'eu-west-3':
-      NATAMI: 'ami-00ec2680d0d697ad0'
-    'eu-west-2':
-      NATAMI: 'ami-011ad77f622e0c2fb'
+      NATAMI: 'ami-0b245de977c42d736'
     'eu-south-1':
-      NATAMI: 'ami-0fbbb2c6a4ec1e30d'
-    'eu-west-1':
-      NATAMI: 'ami-0a56c2c5f57ae7f9a'
-    'ap-northeast-3':
-      NATAMI: 'ami-05bd005a72b2ad111'
-    'ap-northeast-2':
-      NATAMI: 'ami-0e3e1b45a02a17920'
-    'me-south-1':
-      NATAMI: 'ami-03cba91974d807acf'
-    'ap-northeast-1':
-      NATAMI: 'ami-0a7529bfaaf195a8c'
-    'sa-east-1':
-      NATAMI: 'ami-08936d1fc0040fc58'
+      NATAMI: 'ami-00952b25d858433f0'
+    'eu-south-2':
+      NATAMI: 'ami-072b77713ad9bbcff'
+    'me-central-1':
+      NATAMI: 'ami-09a883fc723ff8dda'
     'ca-central-1':
-      NATAMI: 'ami-0e9d1e46c539f526c'
-    'ap-east-1':
-      NATAMI: 'ami-0c4e0cd8bb5f12fe9'
-    'ap-southeast-1':
-      NATAMI: 'ami-018cd92db227b86e1'
-    'ap-southeast-2':
-      NATAMI: 'ami-0e72186c833bb56c0'
-    'ap-southeast-3':
-      NATAMI: 'ami-060fa367685ed9d0a'
+      NATAMI: 'ami-01f372449a4358a4f'
     'eu-central-1':
-      NATAMI: 'ami-00371432b1bceae1d'
-    'us-east-1':
-      NATAMI: 'ami-05ed49079214c998a'
-    'us-east-2':
-      NATAMI: 'ami-0a8c79bd758e15082'
+      NATAMI: 'ami-01715d8c0c355259b'
+    'eu-central-2':
+      NATAMI: 'ami-055104cd4648d953e'
     'us-west-1':
-      NATAMI: 'ami-01a3c8305ad5936a2'
+      NATAMI: 'ami-0b0e2ca505c6dd53e'
     'us-west-2':
-      NATAMI: 'ami-054c198626cd4a7c6'
+      NATAMI: 'ami-0b8889f9dd66fbacf'
+    'af-south-1':
+      NATAMI: 'ami-03070ab873f51009f'
+    'eu-north-1':
+      NATAMI: 'ami-065eb10d4568d7e4c'
+    'eu-west-3':
+      NATAMI: 'ami-0cc73120b16f10fd7'
+    'eu-west-2':
+      NATAMI: 'ami-01ae497fdffc21d82'
+    'eu-west-1':
+      NATAMI: 'ami-0c228558f54476b53'
+    'ap-northeast-3':
+      NATAMI: 'ami-07d49c41aa12eeafb'
+    'ap-northeast-2':
+      NATAMI: 'ami-082154e7f18b8b668'
+    'me-south-1':
+      NATAMI: 'ami-06a792e220bb63fa6'
+    'ap-northeast-1':
+      NATAMI: 'ami-06748ad6e578e2946'
+    'sa-east-1':
+      NATAMI: 'ami-0f5ccf63506ec4164'
+    'ap-east-1':
+      NATAMI: 'ami-0fc1499a921d39f61'
+    'ap-southeast-1':
+      NATAMI: 'ami-0dbb22a253fa1ae34'
+    'ap-southeast-2':
+      NATAMI: 'ami-085f4f37f811b8091'
+    'ap-southeast-3':
+      NATAMI: 'ami-0cff6cb9fe28edb7c'
+    'ap-southeast-4':
+      NATAMI: 'ami-04decf96d3094cb95'
+    'us-east-1':
+      NATAMI: 'ami-0c1062d67d276c699'
+    'us-east-2':
+      NATAMI: 'ami-01fe19ff26b9691de'
 Conditions:
   HasIAMUserSSHAccess: !Equals [ !Ref IAMUserSSHAccess, 'true' ]
 Resources:
