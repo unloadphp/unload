@@ -42,6 +42,7 @@ trait EnvironmentConstruct
         $environmentVariables = [
             'CI_SECRET' => new TaggedValue('Ref', 'CiSecret'),
             'ASSET_URL' => new TaggedValue('Ref', 'EnvAssetUrl'),
+            'MIX_ASSET_URL' => new TaggedValue('Ref', 'EnvAssetUrl'),
             'APP_CONFIG_CACHE' => '/tmp/config.php',
             'BREF_PING_DISABLE' => 1,
             'LOG_CHANNEL' => 'stderr',
