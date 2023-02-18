@@ -2,6 +2,7 @@
 
 namespace App\Templates;
 
+use App\Path;
 use Illuminate\Support\Facades\File;
 
 class UnloadTemplate extends Template
@@ -14,6 +15,9 @@ class UnloadTemplate extends Template
         }
 
         File::put($this->unloadConfig->template(), $template->toString());
+
+        $rootGitignore = Path::current().'/.gitignore';
+        File::append($rootGitignore, "\n.unload/\n.aws-sam/");
 
         return true;
     }
