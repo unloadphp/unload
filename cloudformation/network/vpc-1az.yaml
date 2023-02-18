@@ -262,6 +262,13 @@ Resources:
       VpcId: !Ref VPC
       VpcEndpointType: 'Gateway'
       RouteTableIds: [!Ref RouteTableAPrivate, !Ref RouteTableBPrivate]
+  S3VpcEndpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
+      VpcEndpointType: 'Gateway'
+      RouteTableIds: [ !Ref RouteTableAPrivate, !Ref RouteTableBPrivate ]
 
 Outputs:
   NumberOfAZs:
