@@ -26,7 +26,7 @@ class UploadAssetTask
                 $fileName = str($file->getPathname())->replace(Path::tmpAssetDirectory(), '')->toString();
                 $filePath = "assets/$assetHash{$fileName}";
 
-                if (in_array($fileName, ['/favicon.ico', '/robots.txt']) || str_ends_with($fileName, '.html')) {
+                if (in_array($fileName, ['/favicon.ico', '/favicon.png', '/favicon.svg', '/robots.txt']) || str_ends_with($fileName, '.html')) {
                     $filePath = trim($fileName, '/');
                 }
 

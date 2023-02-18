@@ -30,7 +30,7 @@ APP_KEY={$appKey}
 
 APP_DEBUG=false
 APP_ENV={$this->config->env()}
-SESSION_DRIVER=dynamodb
+SESSION_DRIVER=cookie
 CACHE_DRIVER=dynamodb
 CACHE_STORE=dynamodb
 

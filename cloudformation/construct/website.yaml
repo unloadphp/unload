@@ -234,7 +234,7 @@ Resources:
             MaxTTL: 86400
             MinTTL: 60
             TargetOriginId: s3origin
-            PathPattern: /favicon.ico
+            PathPattern: /favicon.*
             ViewerProtocolPolicy: 'redirect-to-https'
           - AllowedMethods:
               - GET
