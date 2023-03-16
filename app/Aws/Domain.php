@@ -14,7 +14,7 @@ class Domain
 
     public function __construct(UnloadConfig $unload)
     {
-        $this->route53 = new Route53Client(['profile' => $unload->profile(), 'region' => $unload->region(), 'version' => 'latest']);
+        $this->route53 = new Route53Client(['profile' => $unload->profile(), 'region' => $unload->region(), 'endpoint' => $unload->endpoint(), 'version' => 'latest',]);
         $this->unload = $unload;
     }
 

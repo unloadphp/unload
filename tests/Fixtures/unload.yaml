@@ -1,0 +1,11 @@
+version: 0.1
+app: sample
+
+profile: default
+env: production
+region: us-east-1
+runtime: provided
+php: 8.1
+
+build: |
+  composer install --ignore-platform-reqs --no-dev --prefer-dist --no-interaction --no-progress --ignore-platform-reqs --optimize-autoloader --classmap-authoritative

@@ -4,7 +4,7 @@ namespace App;
 
 class System
 {
-    public static function open(string $content): string
+    public function open(string $content): string
     {
         $tmpFilePath = tempnam(sys_get_temp_dir(), 'unload'.time());
         file_put_contents($tmpFilePath, $content);
@@ -16,7 +16,7 @@ class System
         return $newContent;
     }
 
-    public static function browser(string $url): int
+    public function browser(string $url): int
     {
         return (int) exec("open '$url' 2>/dev/null || xdg-open '$url' 2>/dev/null");
     }

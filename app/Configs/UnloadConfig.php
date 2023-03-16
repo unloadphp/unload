@@ -29,9 +29,9 @@ class UnloadConfig
         $this->input = $input;
     }
 
-    public static function fromCommand(InputInterface $input = null): self
+    public static function fromPath(?string $config, InputInterface $input = null): self
     {
-        $unloadConfigPath = Path::unloadTemplatePath($input?->getOption('config'));
+        $unloadConfigPath = Path::unloadTemplatePath($config);
         $config = [];
         if (file_exists($unloadConfigPath)) {
             $config = Yaml::parse(file_get_contents($unloadConfigPath));
@@ -56,6 +56,11 @@ class UnloadConfig
             $ignoreFiles,
             $input,
         );
+    }
+
+    public static function fromCommand(InputInterface $input = null): self
+    {
+        return static::fromPath($input?->getOption('config'), $input);
     }
 
     public function app(): string
@@ -100,6 +105,15 @@ class UnloadConfig
         }
 
         return Arr::get($this->config, 'profile', 'default');
+    }
+
+    public function endpoint(): ?string
+    {
+        if (App::runningUnitTests()) {
+            return 'http://localhost:4566';
+        }
+
+        return null;
     }
 
     public function runtime(): string

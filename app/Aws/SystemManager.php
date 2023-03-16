@@ -15,7 +15,7 @@ class SystemManager
 
     public function __construct(UnloadConfig $unload)
     {
-        $this->ssm = new SsmClient(['profile' => $unload->profile(), 'region' => $unload->region(), 'version' => '2014-11-06']);
+        $this->ssm = new SsmClient(['profile' => $unload->profile(), 'region' => $unload->region(), 'endpoint' => $unload->endpoint(), 'version' => '2014-11-06']);
         $this->unload = $unload;
     }
 
@@ -57,7 +57,7 @@ class SystemManager
         string $existingEnvironment = null,
         bool $rotate = false
     ): void {
-        if ($newEnvironment == $existingEnvironment) {
+        if ($newEnvironment == $existingEnvironment && $rotate === false) {
             return;
         }
 
@@ -103,6 +103,7 @@ class SystemManager
         ];
 
         $this->ssm->putParameter($properties);
+
         $this->ssm->addTagsToResource([
             'ResourceType' => 'Parameter',
             'ResourceId' => $name,

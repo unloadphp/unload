@@ -111,6 +111,10 @@ class Path
 
     public static function unloadTemplatePath(?string $config, bool $relative = false): string
     {
+        if (str_starts_with($config, '/') && !$relative) {
+            return $config;
+        }
+
         if (str_contains($config, '.yaml')) {
             if ($relative) {
                 return $config;

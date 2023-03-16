@@ -11,12 +11,12 @@ class EnvCommand extends Command
     protected $signature = 'env {--rotate}';
     protected $description = 'Update application environment configuration';
 
-    public function handle(SystemManager $manager): void
+    public function handle(SystemManager $manager, System $system): void
     {
         $this->info('Retrieving environment configuration from system manager');
 
         $environment = $manager->fetchEnvironment(decrypt: true);
-        $newEnvironment = System::open($environment);
+        $newEnvironment = $system->open($environment);
 
         $this->step(
             'Saving environment configuration to system manager',

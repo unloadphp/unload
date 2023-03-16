@@ -16,6 +16,7 @@ trait CreatesApplication
         $app = require __DIR__.'/../bootstrap/app.php';
 
         $app->make(Kernel::class)->bootstrap();
+        $app['env'] = 'testing';
 
         putenv('AWS_SHARED_CREDENTIALS_FILE='.base_path('tests/Fixtures/.aws/credentials'));
 
