@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Commands;
 
 use App\Tasks\CleanupPipelineConfigTask;
 use App\Tasks\GeneratePipelineTask;
