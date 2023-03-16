@@ -17,6 +17,8 @@ trait CreatesApplication
 
         $app->make(Kernel::class)->bootstrap();
 
+        putenv('AWS_SHARED_CREDENTIALS_FILE='.base_path('tests/Fixtures/.aws/credentials'));
+
         return $app;
     }
 }

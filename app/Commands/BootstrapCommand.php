@@ -75,7 +75,7 @@ class BootstrapCommand extends Command
             try {
                 call_user_func(CredentialProvider::ini($profile))->wait();
             } catch (CredentialsException $e) {
-                $this->warn("Profile $provider not found at ~/.aws/credentials. Please create one and then retry.");
+                $this->warn("Profile $profile not found at ~/.aws/credentials. Please create one and then retry.");
                 $this->error($e->getMessage());
                 return;
             }
