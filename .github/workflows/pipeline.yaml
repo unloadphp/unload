@@ -22,11 +22,11 @@ jobs:
       - run: |
           # configure localstack
           pip install localstack
-          docker pull localstack/localstack
+          docker pull localstack/localstack-pro
           localstack start -d
           localstack wait -t 30
           
           # install composer and run tests
           composer install
-          ./vendor/bin/phpunit --testdox
+          ./vendor/bin/phpunit --configuration phpunit.xml --testdox
           
