@@ -133,7 +133,8 @@
             "then": {
                     "properties": {
                         "version": {
-                            "type": "string"
+                            "type": "string",
+                            "enum": ["5.7.mysql-aurora.2.08.3"]
                         },
                         "min-capacity": {
                             "type": "integer",

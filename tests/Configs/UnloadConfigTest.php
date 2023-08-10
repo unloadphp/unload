@@ -94,16 +94,39 @@ php: 8.1
 YAML
             ],
             [
-                'The properties must match schema: php',
+                'The required properties (min-capacity) are missing',
                 <<<YAML
 version: 0.1
 app: sample
 
 env: production
 region: us-east-1
-php: 8,2
+php: 8.2
+
+database:
+    engine: aurora
+    version: 5.7.mysql-aurora.2.07.3
 YAML
-            ]
+            ],
+            [
+                'The properties must match schema: version',
+                <<<YAML
+version: 0.1
+app: sample
+
+env: production
+region: us-east-1
+php: 8.2
+
+database:
+    engine: aurora
+    version: 5.7.mysql-aurora.2.07.3
+    min-capacity: 1
+    max-capacity: 1
+    auto-pause: 30
+    backup-retention: 0
+YAML
+            ],
         ];
     }
 }
