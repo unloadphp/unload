@@ -5,7 +5,6 @@
 .phpunit.result.cache
 /.unload
 /builds
-composer.lock
 /tests/Fixtures/tmp
 .env.testing
 /tests/Fixtures/.aws
