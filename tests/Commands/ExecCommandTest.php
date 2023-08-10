@@ -7,7 +7,7 @@ use App\Tasks\InitNetworkTask;
 use Illuminate\Support\Facades\App;
 use Tests\TestCase;
 
-class NetworkCommandTest extends TestCase
+class ExecCommandTest extends TestCase
 {
     public function test_can_request_network_creation()
     {
