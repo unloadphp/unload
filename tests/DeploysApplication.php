@@ -1,23 +1,18 @@
 <?php
 
-namespace Tests\Integration;
+namespace Tests;
 
-use Tests\TestCase;
+use Illuminate\Process\PendingProcess;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
-class DeploymentTest extends TestCase
+trait DeploysApplication
 {
-    public function test_can_bootstrap_and_deploy_sample_application()
+    public function process(): PendingProcess
     {
-        $this->setupTempDirectory();
-
-        exec('composer create-project laravel/laravel .');
-
-        $this->setupLocalPackageRepository();
-
-        exec('composer require unload/unload-laravel');
-
-        exec('../../../unload bootstrap --app=test --php=8.1 --env=production --provider=github --profile=integration --repository=test/example --no-interaction', $output);
-        dd($output);
+        return Process::path(base_path('tests/Fixtures/tmp'))->env([
+            'AWS_SHARED_CREDENTIALS_FILE' => getenv('AWS_SHARED_CREDENTIALS_FILE'),
+        ]);
     }
 
     protected function setupTempDirectory(): void

@@ -58,6 +58,26 @@ class UnloadConfig
         );
     }
 
+    public static function fromString(?string $rawConfig): self
+    {
+        $config = Yaml::parse($rawConfig);
+
+        $validator = new \Opis\JsonSchema\Validator();
+        $validator->resolver()->registerFile('https://unload.dev/unload01.json', resource_path('unload01.json'));
+        $validated = $validator->validate(Helper::toJSON($config), 'https://unload.dev/unload01.json');
+
+        if (!$validated->isValid()) {
+            $validationMessages = implode("\n  ", (new ErrorFormatter())->formatFlat($validated->error()));
+            throw new \Exception($validationMessages);
+        }
+
+        return new self(
+            $config,
+            [],
+            null,
+        );
+    }
+
     public static function fromCommand(InputInterface $input = null): self
     {
         return static::fromPath($input?->getOption('config'), $input);

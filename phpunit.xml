@@ -12,8 +12,8 @@
         <testsuite name="Commands">
             <directory suffix="Test.php">./tests/Commands</directory>
         </testsuite>
-        <testsuite name="Unit">
-            <directory suffix="Test.php">./tests/Unit</directory>
+        <testsuite name="Configs">
+            <directory suffix="Test.php">./tests/Configs</directory>
         </testsuite>
     </testsuites>
     <php>

@@ -210,6 +210,48 @@
             "else": {
             },
             "required": ["engine"]
+        },
+        "buckets": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "access": {
+                        "type": "string",
+                        "enum": ["private", "public-read"]
+                    },
+                    "versioning": {
+                        "type": "string",
+                        "enum": ["yes", "no"]
+                    },
+                    "size": {
+                        "type": "string",
+                        "enum": ["1GB", "100GB", "250GB"]
+                    }
+                },
+                "if": {
+                    "properties": { "size": { "enum": ["1GB", "100GB", "250GB"] } }
+                },
+                "then": {
+                },
+                "else": {
+                    "version-expiration": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "expiration": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "expiration-prefix": {
+                        "type": "string"
+                    }
+                },
+                "dependentRequired": {
+                    "expiration-prefix": ["expiration"],
+                    "expiration": ["expiration-prefix"]
+                }
+            }
         }
     },
     "required": ["version", "app", "env", "region"]

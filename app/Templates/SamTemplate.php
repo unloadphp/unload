@@ -181,7 +181,7 @@ class SamTemplate extends Template
                                 'WEB_CONCURRENCY' => $this->unloadConfig->defaultWarm(),
                             ],
                         ],
-                        'Runtime' => 'nodejs12.x',
+                        'Runtime' => 'nodejs18.x',
                         'Timeout' => 900,
                         'InlineCode' => Cloudformation::get('deploy.js'),
                         'Handler' => 'index.handler',

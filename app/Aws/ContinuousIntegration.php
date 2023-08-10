@@ -136,8 +136,10 @@ class ContinuousIntegration
     public function applicationStackExists(): bool
     {
         try {
-            $this->cloudformation->describeStacks(['StackName' => $this->unload->appStackName()]);
-            return true;
+            return in_array(
+                $this->cloudformation->describeStacks(['StackName' => $this->unload->appStackName()])->search('Stacks[0].StackStatus'),
+                ['UPDATE_COMPLETE', 'CREATE_COMPLETE']
+            );
         } catch (CloudFormationException $e) {
             return false;
         }

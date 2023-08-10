@@ -1,0 +1,66 @@
+---
+# Copyright 2018 widdix GmbH
+# Modification Copyright 2022 unload.sh
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Storage: S3 bucket'
+Parameters:
+  BucketName:
+    Description: 'Optional name of the bucket.'
+    Type: String
+    Default: ''
+  BundleId:
+    Description: 'Optional size of the bucket.'
+    Type: String
+    Default: 'small_1_0'
+    AllowedValues: [ small_1_0, medium_1_0, large_1_0]
+  Access:
+    Description: 'Access policy of the bucket.'
+    Type: String
+    Default: Private
+    AllowedValues: [ Private, PublicRead]
+  Versioning:
+    Description: 'Enable versioning to keep a backup if objects change.'
+    Type: String
+    Default: true
+    AllowedValues: [ true, false, 'suspended' ]
+Conditions:
+  HasPrivateAccess: !Equals [ !Ref Access, Private ]
+  HasPublicReadAccess: !Equals [ !Ref Access, PublicRead ]
+  HasBucketName: !Not [ !Equals [ !Ref BucketName, '' ] ]
+  HasVersioning: !Equals [ !Ref Versioning, true ]
+  HadVersioning: !Equals [ !Ref Versioning, 'suspended' ]
+  HasPublicAccessBlock: !Not [ !Condition HasPublicReadAccess ]
+Resources:
+  Bucket: # cannot be deleted with data
+    Type: 'AWS::Lightsail::Bucket'
+    DeletionPolicy: "Retain"
+    Properties:
+      BucketName: !If [ HasBucketName, !Ref BucketName, !Ref 'AWS::NoValue' ]
+      BundleId: !Ref BundleId
+      ObjectVersioning: !If [ HasVersioning, { Status: Enabled }, !If [ HadVersioning, { Status: Suspended }, !Ref 'AWS::NoValue' ]]
+      AccessRules:
+        AllowPublicOverrides: true
+        GetObject: !If [ HasPublicReadAccess, 'public', 'private' ]
+Outputs:
+  BucketName:
+    Description: 'Name of the bucket'
+    Value: !Ref Bucket
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketName'
+  BucketDomainName:
+    Description: 'Domain name of the bucket.'
+    Value: !GetAtt 'Bucket.Url'
+    Export:
+      Name: !Sub '${AWS::StackName}-BucketDomainName'
