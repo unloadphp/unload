@@ -51,59 +51,61 @@ Parameters:
 Mappings:
   RegionMap:
     'ap-south-2':
-      NATAMI: 'ami-0797efd94fb23dfb7'
+      NATAMI: 'ami-0d252091aa195a6eb'
     'ap-south-1':
-      NATAMI: 'ami-0b245de977c42d736'
+      NATAMI: 'ami-022b58402848af996'
     'eu-south-1':
-      NATAMI: 'ami-00952b25d858433f0'
+      NATAMI: 'ami-0a0df1cd58326a9ee'
     'eu-south-2':
-      NATAMI: 'ami-072b77713ad9bbcff'
+      NATAMI: 'ami-0241604a43fcdd5c0'
     'me-central-1':
-      NATAMI: 'ami-09a883fc723ff8dda'
+      NATAMI: 'ami-0a347b220446b7455'
+    'il-central-1':
+      NATAMI: 'ami-0e9d233082f9a7ecd'
     'ca-central-1':
-      NATAMI: 'ami-01f372449a4358a4f'
+      NATAMI: 'ami-089b775f43ed829d9'
     'eu-central-1':
-      NATAMI: 'ami-01715d8c0c355259b'
+      NATAMI: 'ami-0987835c48a638d5c'
     'eu-central-2':
-      NATAMI: 'ami-055104cd4648d953e'
+      NATAMI: 'ami-0af2013e2fc5fefa5'
     'us-west-1':
-      NATAMI: 'ami-0b0e2ca505c6dd53e'
+      NATAMI: 'ami-017122a265b2b84e6'
     'us-west-2':
-      NATAMI: 'ami-0b8889f9dd66fbacf'
+      NATAMI: 'ami-0249fcce31b8ac991'
     'af-south-1':
-      NATAMI: 'ami-03070ab873f51009f'
+      NATAMI: 'ami-0a239823fe260fe25'
     'eu-north-1':
-      NATAMI: 'ami-065eb10d4568d7e4c'
+      NATAMI: 'ami-0b1d85becad49dd65'
     'eu-west-3':
-      NATAMI: 'ami-0cc73120b16f10fd7'
+      NATAMI: 'ami-090ff51c987eaca51'
     'eu-west-2':
-      NATAMI: 'ami-01ae497fdffc21d82'
+      NATAMI: 'ami-03ab34f3697e77802'
     'eu-west-1':
-      NATAMI: 'ami-0c228558f54476b53'
+      NATAMI: 'ami-091846419ebe1075b'
     'ap-northeast-3':
-      NATAMI: 'ami-07d49c41aa12eeafb'
+      NATAMI: 'ami-06664868c74d1e4f9'
     'ap-northeast-2':
-      NATAMI: 'ami-082154e7f18b8b668'
+      NATAMI: 'ami-04420bca1d2dbc3d7'
     'me-south-1':
-      NATAMI: 'ami-06a792e220bb63fa6'
+      NATAMI: 'ami-0827906823062f880'
     'ap-northeast-1':
-      NATAMI: 'ami-06748ad6e578e2946'
+      NATAMI: 'ami-061bc56e8a95679a4'
     'sa-east-1':
-      NATAMI: 'ami-0f5ccf63506ec4164'
+      NATAMI: 'ami-061e571b8d023e9c1'
     'ap-east-1':
-      NATAMI: 'ami-0fc1499a921d39f61'
+      NATAMI: 'ami-08b0b1e78ba230878'
     'ap-southeast-1':
-      NATAMI: 'ami-0dbb22a253fa1ae34'
+      NATAMI: 'ami-0b95fcf2f61a5622a'
     'ap-southeast-2':
-      NATAMI: 'ami-085f4f37f811b8091'
+      NATAMI: 'ami-0ab90dc2926e60aa2'
     'ap-southeast-3':
-      NATAMI: 'ami-0cff6cb9fe28edb7c'
+      NATAMI: 'ami-0f93836adea4c4135'
     'ap-southeast-4':
-      NATAMI: 'ami-04decf96d3094cb95'
+      NATAMI: 'ami-0a349795e6e35a8c8'
     'us-east-1':
-      NATAMI: 'ami-0c1062d67d276c699'
+      NATAMI: 'ami-04b00c80d404218ff'
     'us-east-2':
-      NATAMI: 'ami-01fe19ff26b9691de'
+      NATAMI: 'ami-00e0fc8a9078602be'
 Conditions:
   HasIAMUserSSHAccess: !Equals [ !Ref IAMUserSSHAccess, 'true' ]
 Resources:
