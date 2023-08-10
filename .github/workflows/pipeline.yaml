@@ -22,7 +22,7 @@ jobs:
       - run: |
           # configure localstack
           pip install localstack
-          docker pull localstack/localstack-pro
+          docker pull localstack/localstack
           localstack start -d
           localstack wait -t 30
           
