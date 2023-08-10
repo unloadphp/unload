@@ -369,7 +369,7 @@ class UnloadConfig
     public function accountId()
     {
         if (!$this->accountId) {
-            $sts = new StsClient(['region' => $this->region(), 'profile' => $this->profile(), 'version' => '2011-06-15']);
+            $sts = App::make(StsClient::class, ['args' => ['region' => $this->region(), 'profile' => $this->profile(), 'version' => '2011-06-15']]);
             $this->accountId = $sts->getCallerIdentity()->search('Account');
         }
         return $this->accountId;

@@ -16,7 +16,7 @@ use Aws\Exception\CredentialsException;
 
 class BootstrapCommand extends Command
 {
-    protected $signature = 'bootstrap';
+    protected $signature = 'bootstrap {--app=} {--php=8.1} {--provider=github} {--repository=} {--region=eu-central-1} {--branch=master} {--profile=} {--vpc=1az} {--vpc-nat=instance} {--vpc-ssh=1}';
     protected $description = 'Bootstrap an environment and application template';
 
     const REGIONS = [
@@ -47,11 +47,11 @@ class BootstrapCommand extends Command
 
     public function handle(): void
     {
-        $app = $this->ask('App name (example: sample)', null);
-        $php = $this->choice('App php version', ['8.0', '8.1', '8.2'], '8.1');
-        $environments = explode('/', $this->choice('App environment', ['production', 'production/development'], 'production'));
-        $provider = $this->choice('App repository provider', ['github', 'bitbucket'], 'github');
-        $repository = $this->ask('App repository path (example: username/app-name)', null);
+        $app = $this->ask('App name (example: sample)', $this->option('app'));
+        $php = $this->choice('App php version', ['8.0', '8.1', '8.2'], $this->option('php'));
+        $environments = explode('/', $this->choice('App environment', ['production', 'production/development'], $this->option('env') ?? 'production'));
+        $provider = $this->choice('App repository provider', ['github', 'bitbucket'], $this->option('provider'));
+        $repository = $this->ask('App repository path (example: username/app-name)', $this->option('repository'));
         $audience = null;
         $repositoryUuid = '';
 
@@ -68,9 +68,9 @@ class BootstrapCommand extends Command
             $envName = ucfirst($env);
             $this->info($envName);
 
-            $region = $this->askWithCompletion("$envName aws region", self::REGIONS);
-            $branch = $this->ask("$envName $provider branch", 'master');
-            $profile = $this->ask("$envName aws profile", "$app-$env");
+            $region = $this->askWithCompletion("$envName aws region", self::REGIONS, $this->option('region'));
+            $branch = $this->ask("$envName $provider branch", $this->option('branch'));
+            $profile = $this->ask("$envName aws profile", $this->option('profile'));
 
             try {
                 call_user_func(CredentialProvider::ini($profile))->wait();
@@ -80,9 +80,9 @@ class BootstrapCommand extends Command
                 return;
             }
 
-            $vpc = $this->choice("$envName aws vpc size", ["1az", "2az"], "1az");
-            $nat = $this->choice("$envName aws nat type", ["gateway", "instance"], "instance");
-            $ssh = $this->confirm("$envName aws vpc ssh access (allow database connection from internet)", true);
+            $vpc = $this->choice("$envName aws vpc size", ["1az", "2az"], $this->option('vpc'));
+            $nat = $this->choice("$envName aws nat type", ["gateway", "instance"], $this->option('vpc-nat'));
+            $ssh = $this->confirm("$envName aws vpc ssh access (allow database connection from internet)", $this->option('vpc-ssh'));
 
             $bootstrap = new BootstrapConfig(compact(
             'region', 'profile', 'env', 'app', 'repositoryUuid',
@@ -100,5 +100,7 @@ class BootstrapCommand extends Command
             new GeneratePipelineTask($provider, count($environments)),
             new CleanupPipelineConfigTask()
         ])->execute($this);
+
+        $this->line("Project $app bootstrapping has been completed.");
     }
 }

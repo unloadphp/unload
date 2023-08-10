@@ -15,8 +15,14 @@ class LayerConfig
     public function __construct(UnloadConfig $unload)
     {
         $this->unload = $unload;
-        $this->php = json_decode(file_get_contents(Path::layersFile()), true);
-        $this->extensions = json_decode(file_get_contents(Path::extensionFile()), true);
+        $this->php = [
+            'account' => 403367587399,
+            'layers' => json_decode(file_get_contents(Path::layersFile()), true),
+        ];
+        $this->extensions = [
+            'account' => 403367587399,
+            'layers' => json_decode(file_get_contents(Path::extensionFile()), true),
+        ];
     }
 
     public function php(): string

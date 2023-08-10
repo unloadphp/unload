@@ -2,27 +2,11 @@
 
 namespace Tests;
 
-use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\File;
 
-trait CreatesApplication
+trait ConfiguresAws
 {
-    /**
-     * Creates the application.
-     *
-     * @return \Illuminate\Foundation\Application
-     */
-    public function createApplication()
-    {
-        $app = require __DIR__.'/../bootstrap/app.php';
-
-        $app->make(Kernel::class)->bootstrap();
-        $app['env'] = 'testing';
-
-        return $app;
-    }
-
-    private function configureAwsTestCrendentials(): void
+    public function setUpConfiguresAws(): void
     {
         $credentials = base_path('tests/Fixtures/.aws/credentials');
         $id = env('AWS_ACCESS_KEY_ID');
@@ -44,5 +28,11 @@ aws_access_key_id=$id
 aws_secret_access_key=$secret
 
 INI);
+    }
+
+    public function tearDownConfiguresAws(): void
+    {
+        unlink(base_path('tests/Fixtures/.aws/credentials'));
+        rmdir(base_path('tests/Fixtures/.aws'));
     }
 }

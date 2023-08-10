@@ -101,12 +101,12 @@ class Path
 
     public static function layersFile(): string
     {
-        return base_path('layers/php.json');
+        return self::tmpApp('vendor/bref/bref/layers.json');
     }
 
     public static function extensionFile(): string
     {
-        return base_path('layers/extension.json');
+        return self::tmpApp('vendor/bref/extra-php-extensions/layers.json');
     }
 
     public static function unloadTemplatePath(?string $config, bool $relative = false): string

@@ -3,7 +3,7 @@
 namespace App\Commands;
 
 use App\Configs\UnloadConfig;
-use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Process;
 
 class LogCommand extends Command
 {
@@ -46,8 +46,8 @@ class LogCommand extends Command
             $command .= ' --tail ';
         }
 
-        $deploy = Process::fromShellCommandline($command, null, ['SAM_CLI_TELEMETRY' => 0]);
-        $deploy->setTimeout(3600);
-        $deploy->run(fn ($type, $line) => $this->output->write($line));
+        Process::env(['SAM_CLI_TELEMETRY' => 0])->run($command, function (string $type, string $output) {
+            $this->output->write($output);
+        });
     }
 }
