@@ -1,0 +1,32 @@
+name: Unload Pipeline
+
+on:
+  push:
+    branches:
+      - 'master'
+
+env:
+  LOCALSTACK_API_KEY: ${{ secrets.LOCALSTACK_API_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+jobs:
+  test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+      - run: |
+          # configure localstack
+          pip install localstack
+          docker pull localstack/localstack-pro
+          localstack start -d
+          localstack wait -t 30
+          
+          # install composer and run tests
+          composer install
+          ./vendor/bin/phpunit --testdox
+          
