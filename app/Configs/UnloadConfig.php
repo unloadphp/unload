@@ -120,7 +120,12 @@ class UnloadConfig
 
     public function profile(): ?string
     {
-        if (!file_exists(getenv('HOME').'/.aws/credentials')) {
+        $credentialsPath = getenv('AWS_SHARED_CREDENTIALS_FILE');
+        if (!$credentialsPath) {
+            $credentialsPath = getenv('HOME').'/.aws/credentials';
+        }
+
+        if (!file_exists($credentialsPath)) {
             return null;
         }
 
