@@ -1,5 +1,7 @@
 #!/bin/bash
 
+composer install --no-dev --classmap-authoritative --optimize-autoloader
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 LATEST_TAG=$( git describe --tags --abbrev=0 )
 
