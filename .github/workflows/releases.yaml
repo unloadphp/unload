@@ -27,6 +27,8 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag }}
+          body: |
+            ## Release [${{ github.event.inputs.tag }}]
           fail_on_unmatched_files: true
           files: |
             builds/unload-${{ github.event.inputs.tag }}-linux
