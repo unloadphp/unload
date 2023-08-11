@@ -51,7 +51,7 @@ YAML
     }
 
     /** @dataProvider  missingPropertiesDataProvider*/
-    public function test_fails_when_app_missing($message, $template)
+    public function test_invalid_configuration_fails($message, $template)
     {
         $this->expectExceptionMessage($message);
 
