@@ -28,7 +28,8 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           fail_on_unmatched_files: true
-          draft: true
           files: |
             builds/unload-${{ github.event.inputs.tag }}-linux
             builds/unload-${{ github.event.inputs.tag }}-macos
+      - name: Run tag publish
+        run: git push origin ${{ github.event.inputs.tag }}
