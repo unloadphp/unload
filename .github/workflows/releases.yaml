@@ -1,0 +1,34 @@
+name: Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'New tag name'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run tag creation
+        run: git tag ${{ github.event.inputs.tag }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.1
+      - name: Run binary build
+        run: |
+          chmod +x ./build/build.sh
+          ./build/build.sh
+           chmod +x ./builds/unload-0.1.2-linux
+           chmod +x ./builds/unload-0.1.2-macos
+          ./builds/unload-0.1.2-linux --version
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }}
+          fail_on_unmatched_files: true
+          draft: true
+          files: |
+            builds/unload-${{ github.event.inputs.tag }}-linux
+            builds/unload-${{ github.event.inputs.tag }}-macos
