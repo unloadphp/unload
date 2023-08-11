@@ -21,9 +21,9 @@ jobs:
         run: |
           chmod +x ./build/build.sh
           ./build/build.sh
-           chmod +x ./builds/unload-0.1.2-linux
-           chmod +x ./builds/unload-0.1.2-macos
-          ./builds/unload-0.1.2-linux --version
+           chmod +x ./builds/unload-${{ github.event.inputs.tag }}-linux
+           chmod +x ./builds/unload-${{ github.event.inputs.tag }}-macos
+          ./builds/unload-${{ github.event.inputs.tag }}-linux --version
       - uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag }}
