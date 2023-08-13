@@ -9,7 +9,7 @@ use App\Tasks\FlushEnvironmentTask;
 
 class DestroyCommand extends Command
 {
-    protected $signature = 'destroy {--env=}';
+    protected $signature = 'destroy {--force}';
     protected $description = 'Destroy provisioned application resources and artifacts';
 
     public function handle(): void
@@ -19,7 +19,7 @@ class DestroyCommand extends Command
         $this->comment("2) It will remove the application variables in {$this->unload->env()} environment");
         $this->comment("3) It will remove the continuous integration stack for {$this->unload->env()} environment");
 
-        if (!$this->confirm('Are you sure you want to processed?')) {
+        if (!$this->option('force') && !$this->confirm('Are you sure you want to processed?')) {
             return;
         }
 

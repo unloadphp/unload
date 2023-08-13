@@ -10,7 +10,7 @@ trait DeploysApplication
 {
     public function process(): PendingProcess
     {
-        return Process::path(base_path('tests/Fixtures/tmp'))->env([
+        return Process::timeout(3600)->path(base_path('tests/Fixtures/tmp'))->env([
             'AWS_SHARED_CREDENTIALS_FILE' => getenv('AWS_SHARED_CREDENTIALS_FILE'),
         ]);
     }
@@ -36,6 +36,6 @@ trait DeploysApplication
             ]
         ];
 
-        file_put_contents('./composer.json', json_encode($composer));
+        file_put_contents('./composer.json', json_encode($composer, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT));
     }
 }

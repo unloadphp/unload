@@ -90,9 +90,10 @@ class ContinuousIntegration
     {
         try {
             $this->cloudformation->describeStacks(['StackName' => $this->unload->ciStackName()])->get('Stacks');
+            $this->cloudformation->updateTerminationProtection(['StackName' => $this->unload->ciStackName(), 'EnableTerminationProtection' => false]);
             $this->cloudformation->deleteStack(['StackName' => $this->unload->ciStackName()]);
             return new PendingStack($this->unload->ciStackName(), $this->cloudformation);
-        } catch (CloudFormationException) {
+        } catch (CloudFormationException $e) {
             return null;
         }
     }
