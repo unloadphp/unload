@@ -4,6 +4,7 @@ namespace App\Constructs;
 
 use App\Cloudformation;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Symfony\Component\Yaml\Tag\TaggedValue;
 
 trait BucketConstruct
@@ -28,7 +29,7 @@ trait BucketConstruct
             ]);
 
             if ($bucketLightsail) {
-                $this->addLightsailBucket($bucketStack, $bucketAccess, $bucketDefinition);
+                $this->addLightsailBucket($bucketStack, $bucketAccess, $bucketName, $bucketDefinition);
                 continue;
             }
 
@@ -62,7 +63,7 @@ trait BucketConstruct
         ]);
     }
 
-    private function addLightsailBucket(string $bucketStack, string $bucketAccess, array $bucketDefinition): void
+    private function addLightsailBucket(string $bucketStack, string $bucketAccess, string $bucketName, array $bucketDefinition): void
     {
         $this->append('Resources', [
             $bucketStack => [
@@ -71,6 +72,7 @@ trait BucketConstruct
                     'Tags' => $this->unloadConfig->unloadTagsPlain(),
                     'Location' => Cloudformation::compile("storage/bucket-lightsail.yaml"),
                     'Parameters' => [
+                        'BucketName' => $this->generateUniqueBucketResourceName($bucketName),
                         'Access' => $bucketAccess,
                         'Versioning' => ($bucketDefinition['versioning'] ?? 'no') == 'yes',
                         'BundleId' => match ($bucketDefinition['size']) {
@@ -83,5 +85,17 @@ trait BucketConstruct
                 ],
             ]
         ]);
+    }
+
+    private function generateUniqueBucketResourceName(string $bucketName): string
+    {
+        return Str::of($bucketName)
+            ->prepend('-')
+            ->prepend($this->unloadConfig->resourcePrefix())
+            ->limit(50, '')
+            ->append('-')
+            ->append(Str::limit(sha1(strtolower($bucketName).$this->unloadConfig->app()), 13, ''))
+            ->lower()
+            ->toString();
     }
 }

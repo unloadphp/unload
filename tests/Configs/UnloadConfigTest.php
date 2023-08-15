@@ -7,26 +7,12 @@ use Tests\TestCase;
 
 class UnloadConfigTest extends TestCase
 {
-    public function test_fails_if_not_valid_lighsail_bucket_size()
+    public function test_can_parse_complex_valid_configuration()
     {
-        $this->expectExceptionMessage('The properties must match schema: size');
-
-        UnloadConfig::fromString(<<<YAML
-version: 0.1
-app: sample
-
-profile: default
-env: production
-region: us-east-1
-runtime: provided
-php: 8.1
-
-buckets:
-  sample-bucket:
-    access: private
-    size: 24GB
-YAML
-);
+        $this->assertInstanceOf(
+            UnloadConfig::class,
+            UnloadConfig::fromString(file_get_contents(base_path('tests/Fixtures/unload.complex.yaml')))
+        );
     }
 
     public function test_fails_expiration_prefix_not_set_when_expiring_is_set()
@@ -127,6 +113,24 @@ database:
     backup-retention: 0
 YAML
             ],
+            [
+                'The properties must match schema: size',
+                <<<YAML
+version: 0.1
+app: sample
+
+profile: default
+env: production
+region: us-east-1
+runtime: provided
+php: 8.1
+
+buckets:
+  sample-bucket:
+    access: private
+    size: 24GB
+YAML
+            ]
         ];
     }
 }

@@ -20,7 +20,7 @@ class LayerConfig
             'layers' => json_decode(file_get_contents(Path::layersFile()), true),
         ];
         $this->extensions = [
-            'account' => 534081306603,
+            'account' => 403367587399,
             'layers' => json_decode(file_get_contents(Path::extensionFile()), true),
         ];
     }
@@ -64,7 +64,7 @@ class LayerConfig
                 throw new \Exception("Extension $extension not supported. See https://github.com/brefphp/extra-php-extensions.");
             }
 
-            $version = $this->extensions['layers'][$this->unload->region()];
+            $version = $this->extensions['layers'][$layer][$this->unload->region()];
             $layers[] = "arn:aws:lambda:{$this->unload->region()}:{$this->extensions['account']}:layer:$layer:$version";
         }
 
