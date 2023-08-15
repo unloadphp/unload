@@ -3,7 +3,6 @@
 namespace Tests;
 
 use Illuminate\Process\PendingProcess;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Process;
 
 trait DeploysApplication
@@ -21,6 +20,15 @@ trait DeploysApplication
         exec('rm -rf '.$tempDir);
         exec('mkdir -p '.$tempDir);
         chdir($tempDir);
+    }
+
+    protected function setupSampleApp(): void
+    {
+        $complexContent = file_get_contents(base_path('tests/Fixtures/unload.complex.yaml'));
+        file_put_contents('unload.yaml', $complexContent);
+
+        $sampleApp = base_path('tests/Fixtures/sample/*');
+        exec("cp -rf $sampleApp .");
     }
 
     protected function setupLocalPackageRepository(): void
