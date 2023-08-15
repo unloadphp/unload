@@ -1,0 +1,57 @@
+version: 0.1
+app: complex
+
+profile: integration
+env: production
+region: eu-central-1
+runtime: provided
+php: 8.1
+
+warm:
+  day: 5
+  night: 1
+  timezone: Europe/Kiev
+
+database:
+  engine: mysql
+  size: db.t3.micro
+  version: 8.0.34
+  disk: 10
+  multi-az: no
+  backup-retention: 3
+
+cache:
+  engine: redis
+  size: cache.t3.micro
+  version: '7.0'
+  shards: 1
+  replicas: 0
+  snapshot: 1
+
+queues:
+  default:
+    delay: 1
+    timeout: 300
+    polling: short
+    retention: 60
+    tries: 3
+    memory: 512
+
+buckets:
+  lightsail:
+    access: public-read
+    size: 1GB
+
+extensions:
+  - gd
+  - xdebug
+
+firewall:
+  geo-whitelist:
+    - United States
+
+build: |
+  composer install --ignore-platform-reqs --no-dev --prefer-dist --no-interaction --no-progress --ignore-platform-reqs --optimize-autoloader --classmap-authoritative
+
+deploy: |
+  php artisan migrate --force

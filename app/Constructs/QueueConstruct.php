@@ -69,9 +69,9 @@ trait QueueConstruct
                         'Location' => Cloudformation::compile("queue/standard.yaml"),
                         'Parameters' => array_filter([
                             'DelaySeconds' => Arr::get($queueDefinition, 'delay'),
-                            'MessageRetentionPeriod' => Arr::get($queueDefinition, 'retention'),
-                            'ReceiveMessageWaitTimeSeconds' => (Arr::get($queueDefinition, 'wait') == 'long') ? 20 : 0,
-                            'VisibilityTimeout' => Arr::get($queueDefinition, 'visibility-timeout', $this->unloadConfig->timeout()),
+                            'MessageRetentionPeriod' => (int) Arr::get($queueDefinition, 'retention', 60),
+                            'ReceiveMessageWaitTimeSeconds' => (Arr::get($queueDefinition, 'polling') == 'long') ? 20 : 0,
+                            'VisibilityTimeout' => Arr::get($queueDefinition, 'timeout', $this->unloadConfig->timeout()),
                             'MaxReceiveCount' => Arr::get($queueDefinition, 'tries'),
                         ])
                     ],

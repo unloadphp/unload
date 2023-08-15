@@ -113,7 +113,7 @@ database:
     backup-retention: 0
 YAML
             ],
-            [
+            'Size property is validated for lightsail bucket' => [
                 'The properties must match schema: size',
                 <<<YAML
 version: 0.1
@@ -129,6 +129,58 @@ buckets:
   sample-bucket:
     access: private
     size: 24GB
+YAML
+            ],
+            'Version property is required for cache construct' => [
+                'The required properties (version) are missing',
+                <<<YAML
+version: 0.1
+app: sample
+
+profile: default
+env: production
+region: us-east-1
+runtime: provided
+php: 8.1
+
+cache:
+    engine: redis
+YAML
+            ],
+            'Database size property cannot be less than 5 GB' => [
+                'The properties must match schema: disk',
+                <<<YAML
+version: 0.1
+app: sample
+
+profile: default
+env: production
+region: us-east-1
+runtime: provided
+php: 8.1
+
+database:
+    engine: mysql
+    version: 8.0.23
+    disk: 2
+YAML
+            ],
+            'Database version should be valid' => [
+                'The properties must match schema: version',
+                <<<YAML
+version: 0.1
+app: sample
+
+profile: default
+env: production
+region: us-east-1
+runtime: provided
+php: 8.1
+
+database:
+    engine: mysql
+    version: 8.0.01
+    disk: 10
 YAML
             ]
         ];
