@@ -27,7 +27,7 @@ class SystemManager
 
     public function flushEnvironment(): void
     {
-        $environmentParts = $this->ssm->getParametersByPath(['Path' => $this->unload->ssmPath(),]);
+        $environmentParts = $this->ssm->getParametersByPath(['Path' => $this->unload->ssmPath(), 'Recursive' => true]);
 
         foreach($environmentParts->search('Parameters') as $parameter) {
             $this->ssm->deleteParameter(['Name' => $parameter['Name'],]);
