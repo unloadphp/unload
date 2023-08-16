@@ -47,9 +47,16 @@ class PendingStack
                 }
                 $stackDescribeAttempts = 0;
             } catch (CloudFormationException $e) {
+
+                if (str_contains($e->getAwsErrorMessage(), "Stack [$this->stackName] does not exist")) {
+                    $stackInProgress = false;
+                    continue;
+                }
+
                 if ($stackDescribeAttempts > 3) {
                     throw $e;
                 }
+
                 $stackDescribeAttempts++;
                 sleep($stackDescribeAttempts*5);
             }

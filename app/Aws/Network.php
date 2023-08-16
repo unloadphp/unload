@@ -223,4 +223,21 @@ class Network
 
         return new PendingStack($stackName, $this->cloudformation);
     }
+
+    public function deleteStack(): ?PendingStack
+    {
+        $hasDependantStacks = (bool) array_filter($this->cloudformation->describeStacks()->search("Stacks[].Tags[? Key==`unload:env` && Value==`{$this->unload->env()}` ].Value"));
+        if ($hasDependantStacks) {
+            return null;
+        }
+
+        try {
+            $this->cloudformation->describeStacks(['StackName' => $this->unload->networkStackName()])->search('Stacks');
+            $this->cloudformation->updateTerminationProtection(['StackName' => $this->unload->networkStackName(), 'EnableTerminationProtection' => false]);
+            $this->cloudformation->deleteStack(['StackName' => $this->unload->networkStackName()]);
+            return new PendingStack($this->unload->networkStackName(), $this->cloudformation);
+        } catch (CloudFormationException $e) {
+            return null;
+        }
+    }
 }

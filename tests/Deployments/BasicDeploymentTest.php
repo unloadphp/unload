@@ -65,5 +65,8 @@ class BasicDeploymentTest extends TestCase
 
         $this->expectExceptionMessage('Stack with id unload-production-test-app does not exist');
         $cloudformation->describeStacks(['StackName' => 'unload-production-test-ci']);
+
+        $this->expectExceptionMessage('Stack with id unload-production-network does not exist');
+        $cloudformation->describeStacks(['StackName' => 'unload-production-test-ci']);
     }
 }

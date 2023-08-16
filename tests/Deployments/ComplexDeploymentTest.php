@@ -56,19 +56,18 @@ class ComplexDeploymentTest extends TestCase
         $this->assertEquals("ok", $health->http->status);
         $this->assertEquals("ok", $health->disk->status);
 
-        return;
-//        $destroy = $this->process()->timeout(3600)->run('../../../unload destroy --config=unload.yaml --force --no-interaction');
-//        if ($destroy->seeInOutput('Error')) {
-//            $this->fail($destroy->output());
-//        }
-//
-//        $this->expectExceptionMessage('Stack with id unload-production-complex-app does not exist');
-//        $cloudformation->describeStacks(['StackName' => 'unload-production-complex-app']);
-//
-//        $this->expectExceptionMessage('Stack with id unload-production-complex-app does not exist');
-//        $cloudformation->describeStacks(['StackName' => 'unload-production-complex-ci']);
-//
-//        $cloudformation->updateTerminationProtection(['StackName' => 'unload-production-network', 'EnableTerminationProtection' => false]);
-//        $cloudformation->deleteStack(['StackName' => 'unload-production-network']);
+        $destroy = $this->process()->timeout(3600)->run('../../../unload destroy --config=unload.yaml --force --no-interaction');
+        if ($destroy->seeInOutput('Error')) {
+            $this->fail($destroy->output());
+        }
+
+        $this->expectExceptionMessage('Stack with id unload-production-complex-app does not exist');
+        $cloudformation->describeStacks(['StackName' => 'unload-production-complex-app']);
+
+        $this->expectExceptionMessage('Stack with id unload-production-complex-app does not exist');
+        $cloudformation->describeStacks(['StackName' => 'unload-production-complex-ci']);
+
+        $cloudformation->updateTerminationProtection(['StackName' => 'unload-production-network', 'EnableTerminationProtection' => false]);
+        $cloudformation->deleteStack(['StackName' => 'unload-production-network']);
     }
 }
