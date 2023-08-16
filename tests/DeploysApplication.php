@@ -16,6 +16,8 @@ trait DeploysApplication
 
     protected function setupTempDirectory(): void
     {
+        echo 'Configure temporary directory'.PHP_EOL;
+
         $tempDir = base_path('tests/Fixtures/tmp');
         exec('rm -rf '.$tempDir);
         exec('mkdir -p '.$tempDir);
@@ -24,6 +26,8 @@ trait DeploysApplication
 
     protected function setupSampleApp(): void
     {
+        echo 'Configure sample application'.PHP_EOL;
+
         $complexContent = file_get_contents(base_path('tests/Fixtures/unload.complex.yaml'));
         file_put_contents('unload.yaml', $complexContent);
 
@@ -33,14 +37,14 @@ trait DeploysApplication
 
     protected function setupLocalPackageRepository(): void
     {
-        $laravelPackageDir = base_path('../unload-laravel');
+        echo 'Configure unload-laravel package composer repository'.PHP_EOL;
 
         $composer = json_decode(file_get_contents('./composer.json'), true);
         $composer['minimum-stability'] = 'dev';
         $composer['repositories'] = [
             [
-                'type' => 'path',
-                'url' => $laravelPackageDir,
+                'type' => 'git',
+                'url' => 'https://github.com/unloadphp/unload-laravel.git',
             ]
         ];
 

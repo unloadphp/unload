@@ -38,6 +38,10 @@ queues:
     memory: 512
 
 buckets:
+  default:
+    access: public-read
+    versioning: yes
+    version-expiration: 1
   lightsail:
     access: public-read
     size: 1GB

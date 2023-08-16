@@ -4,10 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Test;
 use App\Jobs\TestJob;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -81,6 +79,7 @@ class TestController extends Controller
         }
 
         try {
+            config(['filesystems.disks.s3.throw' => true]);
             Storage::disk('s3')->put('test.txt', 'hello world');
 
             $checks['disk'] = ['status' => 'ok', 'content' => Storage::disk('s3')->get('test.txt')];

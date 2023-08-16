@@ -56,8 +56,7 @@ class ComplexDeploymentTest extends TestCase
         $this->assertEquals("ok", $health->http->status);
         $this->assertEquals("ok", $health->disk->status);
 
-        dd(123);
-
+        return;
 //        $destroy = $this->process()->timeout(3600)->run('../../../unload destroy --config=unload.yaml --force --no-interaction');
 //        if ($destroy->seeInOutput('Error')) {
 //            $this->fail($destroy->output());
