@@ -42,9 +42,6 @@ buckets:
     access: public-read
     versioning: yes
     version-expiration: 1
-  lightsail:
-    access: public-read
-    size: 1GB
 
 extensions:
   - gd

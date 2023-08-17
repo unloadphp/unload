@@ -19,7 +19,8 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: 8.1
-      - run: |
+      - name: Run dependencies installation
+        run: |
           pip install aws-sam-cli
           pip install localstack
           
@@ -28,4 +29,7 @@ jobs:
           localstack wait -t 30
 
           composer install
-          ./vendor/bin/phpunit --testdox
+      - name: Run unit tests
+        run: ./vendor/bin/phpunit --testsuite Unit --testdox
+      - name: Run integration tests
+        run: ./vendor/bin/phpunit --testsuite Integration --testdox
