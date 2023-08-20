@@ -50,6 +50,7 @@ extensions:
 firewall:
   geo-whitelist:
     - UA
+    - US
 
 build: |
   composer install --ignore-platform-reqs --no-dev --prefer-dist --no-interaction --no-progress --ignore-platform-reqs --optimize-autoloader --classmap-authoritative
