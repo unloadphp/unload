@@ -2,6 +2,12 @@
     <img title="Unload" height="100" src="/logo.png" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/unloadphp/unload/actions/workflows/tests.yaml"><img src="https://github.com/unloadphp/unload/actions/workflows/tests.yaml/badge.svg" alt="Build Status"></img></a>
+  <a href="https://github.com/unloadphp/unload/releases"><img src="https://img.shields.io/github/v/release/unloadphp/unload" alt="Latest Stable Version"></a>
+  <a href="https://github.com/unloadphp/unload/blob/master/LICENSE"><img src="https://img.shields.io/github/license/unloadphp/unload" alt="License"></a>
+</p>
+
 ### Serverless Laravel with AWS Cloud
 
 The abstraction layer built upon AWS SAM, this project aims to simplify the onboarding process for Laravel developers venturing into the world of serverless computing. It was highly inspired by the Laravel Vapor platform. 
