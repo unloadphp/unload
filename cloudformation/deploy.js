@@ -101,6 +101,7 @@ async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
 
 async function cloudformationHook(event, context) {
     if (event.RequestType !== "Create") {
+        cfn.send(event, context, cfn.SUCCESS, {});
         return;
     }
 
