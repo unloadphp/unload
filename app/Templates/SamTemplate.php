@@ -187,6 +187,13 @@ class SamTemplate extends Template
                         'Handler' => 'index.handler',
                     ]),
                 ],
+                'InitialDeploymentHook' => [
+                    'Type' => 'AWS::CloudFormation::CustomResource',
+                    'DependsOn' => 'DeployFunction',
+                    'Properties' => [
+                        'ServiceToken' => new TaggedValue('GetAtt', 'DeployFunction.Arn'),
+                    ]
+                ]
             ]
         ];
         return $this;

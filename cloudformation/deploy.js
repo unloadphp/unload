@@ -14,6 +14,7 @@
 'use strict';
 
 const AWS = require('aws-sdk');
+const cfn = require('cfn-response');
 const codedeploy = new AWS.CodeDeploy({apiVersion: '2014-10-06'});
 var lambda = new AWS.Lambda();
 
@@ -45,7 +46,7 @@ async function warmHook(concurrency = null) {
     }
 }
 
-async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
+async function execDeployCli() {
     var cliFunction = process.env.CLI_FUNCTION;
     var deployCommands = process.env.CLI_COMMAND.split("\n").filter(Boolean);
 
@@ -53,6 +54,7 @@ async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
     console.log("BeforeAllowTraffic deployCommands: " + deployCommands);
 
     var lambdaResult = "Succeeded";
+
     for (const command of deployCommands) {
         console.log("Running: " + command);
 
@@ -80,26 +82,54 @@ async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
         }
     }
 
+    return lambdaResult;
+}
+
+async function deployHook(deploymentId, lifecycleEventHookExecutionId) {
+    const execResult = await execDeployCli();
+
     // Complete the PreTraffic Hook by sending CodeDeploy the validation status
     var params = {
         deploymentId: deploymentId,
         lifecycleEventHookExecutionId: lifecycleEventHookExecutionId,
-        status: lambdaResult // status can be 'Succeeded' or 'Failed'
+        status: execResult // status can be 'Succeeded' or 'Failed'
     };
 
-    // // Pass CodeDeploy the prepared validation test results.
+    // Pass CodeDeploy the prepared validation test results.
     return await codedeploy.putLifecycleEventHookExecutionStatus(params).promise();
+}
+
+async function cloudformationHook(event, context) {
+    if (event.RequestType !== "Create") {
+        return;
+    }
+
+    const execResult = await execDeployCli();
+
+    if (execResult === 'Succeeded') {
+        cfn.send(event, context, cfn.SUCCESS, {});
+    } else {
+        cfn.send(event, context, cfn.FAILED, {});
+    }
 }
 
 exports.handler = async (event, context, callback) => {
 
     let deploymentId = event.DeploymentId;
+    let stackId = event.StackId;
     let lifecycleEventHookExecutionId = event.LifecycleEventHookExecutionId;
 
     if (deploymentId) {
         await deployHook(deploymentId, lifecycleEventHookExecutionId);
-        await warmHook()
+        await warmHook();
         callback(null, "deployHook function finished");
+        return;
+    }
+
+    if (stackId) {
+        await cloudformationHook(event, context);
+        await warmHook();
+        callback(null, "cloudformationHook function finished");
         return;
     }
 
@@ -107,9 +137,9 @@ exports.handler = async (event, context, callback) => {
     var warmConcurrency = event.WarmerConcurrency;
 
     if (warm) {
-        await warmHook(warmConcurrency)
+        await warmHook(warmConcurrency);
         callback(null, "warmHook function finished");
     }
 
-    throw new Error("Unknown event: " + JSON.encode(event))
+    throw new Error("Unknown event: " + JSON.encode(event));
 }
