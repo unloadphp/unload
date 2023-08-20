@@ -2,16 +2,17 @@
     <img title="Unload" height="100" src="/logo.png" />
 </p>
 
-### The simplest way to build and deploy a serverless PHP application with AWS Cloud
+### Serverless Laravel with AWS Cloud
 
-The opinionated wrapper on top of AWS SAM that simplifies the entry point for PHP developers in the serverless world. It was highly inspired by the Laravel Vapor platform, but attempts to offer an AWS way for the deployment process while being cost-effective for small projects.
+The abstraction layer built upon AWS SAM, this project aims to simplify the onboarding process for Laravel developers venturing into the world of serverless computing. It was highly inspired by the Laravel Vapor platform. 
+It endeavors to provide a self-contained AWS-oriented deployment approach, specifically designed to suit the needs of smaller projects in a cost-effective manner.
 
-For now supports Laravel framework only, but has plans to expand to other frameworks too.
-
-- Straingforward configuration format to setup core application infractructure.
+- Straightforward configuration format to set up core application infrastructure.
 - Start with nearly zero costs on AWS free tier and scale to production capacity in a few simple steps.
 - Provides templates for Github and Bitbucket to bootstrap your automated CI/CD pipeline.
-- Build on top of existing and battle tested tools like AWS SAM, AWS Cloudformation and Bref.sh.
+- Build on top of existing and battle tested tools like [AWS SAM](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html), [AWS Cloudformation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html) and [Bref.sh](https://bref.sh/docs/).
+
+## Documentation
 
 For full documentation, visit [unload.sh](https://unload.sh/).
 
